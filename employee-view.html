@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="智能排班管理系統 - DK0124">
+    <meta name="description" content="排班查詢系統 - 員工檢視">
     <meta name="author" content="DK0124">
-    <title>排班管理系統 - 管理介面</title>
+    <title>排班查詢系統 - DK0124</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📅</text></svg>">
     
     <style>
@@ -23,7 +23,6 @@
             --dk-shadow: 0 2px 12px rgba(0, 61, 82, 0.08);
             --dk-shadow-hover: 0 4px 20px rgba(0, 61, 82, 0.12);
             --dk-radius: 10px;
-            --dk-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -34,82 +33,82 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(135deg, #F5F7F8 0%, #E8F4F7 100%);
-            color: var(--dk-text);
-            line-height: 1.6;
+            background: linear-gradient(135deg, var(--dk-light) 0%, var(--dk-gray-light) 100%);
             min-height: 100vh;
-        }
-
-        .app {
-            max-width: 1600px;
-            margin: 0 auto;
             padding: 20px;
         }
 
-        /* 頂部導航 */
-        .header {
-            background: var(--dk-white);
-            border-radius: var(--dk-radius);
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: var(--dk-shadow);
-            border-top: 3px solid var(--dk-primary);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
+        /* 標題區 */
+        .header {
+            text-align: center;
+            color: var(--dk-primary);
+            margin-bottom: 30px;
+            padding: 30px;
+            background: var(--dk-white);
+            border-radius: var(--dk-radius);
+            box-shadow: var(--dk-shadow);
         }
 
         .header h1 {
-            font-size: 28px;
-            color: var(--dk-primary);
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
         }
 
-        .brand-badge {
+        .header p {
+            font-size: 16px;
+            color: var(--dk-gray-dark);
+        }
+
+        .last-update {
             background: var(--dk-light);
-            color: var(--dk-primary);
-            padding: 4px 12px;
+            display: inline-block;
+            padding: 6px 16px;
             border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 14px;
+            margin-top: 15px;
+            color: var(--dk-primary);
+            font-weight: 500;
         }
 
-        /* Google Sheets 狀態 */
-        .sheets-status {
+        /* 控制面板 */
+        .control-panel {
+            background: var(--dk-white);
+            border-radius: var(--dk-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--dk-shadow);
+        }
+
+        .control-group {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 16px;
-            background: var(--dk-gray-light);
-            border-radius: 25px;
-            font-size: 14px;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--dk-secondary);
-            animation: pulse 2s infinite;
+        .form-select {
+            padding: 10px 15px;
+            border: 2px solid var(--dk-gray);
+            border-radius: 8px;
+            font-size: 16px;
+            background: var(--dk-white);
+            color: var(--dk-text);
+            min-width: 200px;
+            transition: all 0.3s ease;
         }
 
-        .status-dot.connected {
-            background: #34C759;
+        .form-select:focus {
+            outline: none;
+            border-color: var(--dk-primary);
+            box-shadow: 0 0 0 3px rgba(188, 219, 228, 0.3);
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
-        }
-
-        /* 按鈕樣式 */
         .btn {
             padding: 10px 20px;
             border: none;
@@ -117,16 +116,10 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: var(--dk-transition);
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            white-space: nowrap;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
         }
 
         .btn-primary {
@@ -134,7 +127,7 @@
             color: white;
         }
 
-        .btn-primary:hover:not(:disabled) {
+        .btn-primary:hover {
             background: #002A3A;
             transform: translateY(-2px);
             box-shadow: var(--dk-shadow-hover);
@@ -145,513 +138,237 @@
             color: white;
         }
 
-        .btn-accent:hover:not(:disabled) {
-            background: #D66327;
-            transform: translateY(-2px);
-            box-shadow: var(--dk-shadow-hover);
+        /* 檢視切換 */
+        .view-toggle {
+            background: var(--dk-white);
+            border-radius: var(--dk-radius);
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: var(--dk-shadow);
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
 
-        .btn-secondary {
-            background: var(--dk-secondary);
-            color: white;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: #6B7C74;
-            transform: translateY(-2px);
-        }
-
-        .btn-light {
-            background: var(--dk-light);
-            color: var(--dk-primary);
-        }
-
-        .btn-light:hover:not(:disabled) {
-            background: #A3CDD9;
-        }
-
-        .btn-outline {
+        .view-btn {
+            padding: 8px 16px;
+            border: none;
             background: transparent;
-            color: var(--dk-primary);
-            border: 2px solid var(--dk-primary);
+            color: var(--dk-gray-dark);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
 
-        .btn-outline:hover:not(:disabled) {
+        .view-btn.active {
             background: var(--dk-primary);
             color: white;
         }
 
-        /* Google Sheets 控制面板 */
-        .sheets-panel {
+        /* 統計卡片 */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
             background: var(--dk-white);
-            border-radius: var(--dk-radius);
             padding: 20px;
-            margin-bottom: 25px;
+            border-radius: var(--dk-radius);
+            text-align: center;
             box-shadow: var(--dk-shadow);
-            border-left: 4px solid var(--dk-accent);
+            border-top: 3px solid var(--dk-accent);
         }
 
-        .sheets-panel h3 {
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
             color: var(--dk-primary);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
-        .sync-actions {
+        .stat-label {
+            font-size: 14px;
+            color: var(--dk-gray-dark);
+            margin-top: 5px;
+        }
+
+        /* 排班卡片 */
+        .schedule-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        /* 主要佈局 */
-        .main {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 25px;
-        }
-
-        /* 側邊欄 */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 20px;
         }
 
-        .sidebar-card {
+        .schedule-card {
             background: var(--dk-white);
             border-radius: var(--dk-radius);
-            padding: 20px;
+            overflow: hidden;
             box-shadow: var(--dk-shadow);
+            transition: transform 0.3s ease;
         }
 
-        .sidebar-card h2 {
-            color: var(--dk-primary);
-            font-size: 18px;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--dk-light);
+        .schedule-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--dk-shadow-hover);
         }
 
-        /* 時段管理 */
-        .shift-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-
-        .shift-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: var(--dk-gray-light);
-            border-radius: 8px;
-            transition: var(--dk-transition);
-        }
-
-        .shift-item:hover {
-            background: var(--dk-light);
-            transform: translateX(4px);
-        }
-
-        .shift-name {
-            font-weight: 600;
-            color: var(--dk-primary);
-        }
-
-        .shift-time {
-            font-size: 13px;
-            color: var(--dk-gray-dark);
-        }
-
-        /* 員工列表 */
-        .employee-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .employee-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            margin-bottom: 10px;
-            background: var(--dk-gray-light);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: var(--dk-transition);
-        }
-
-        .employee-item:hover {
-            background: var(--dk-light);
-            transform: translateX(4px);
-        }
-
-        .employee-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
+        .card-header {
+            padding: 15px 20px;
             background: linear-gradient(135deg, var(--dk-primary), var(--dk-secondary));
             color: white;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 16px;
         }
 
-        .employee-info {
-            flex: 1;
-            margin-left: 12px;
-        }
-
-        .employee-name {
+        .card-date {
+            font-size: 20px;
             font-weight: 600;
-            color: var(--dk-primary);
-            font-size: 15px;
         }
 
-        .employee-meta {
-            font-size: 13px;
-            color: var(--dk-gray-dark);
+        .card-weekday {
+            font-size: 14px;
+            opacity: 0.9;
         }
 
-        .employee-badge {
+        .today-badge {
+            background: var(--dk-accent);
+            color: white;
             padding: 4px 10px;
             border-radius: 15px;
             font-size: 12px;
             font-weight: 600;
-            background: var(--dk-accent);
-            color: white;
         }
 
-        .employee-badge.parttime {
-            background: var(--dk-secondary);
+        .card-body {
+            padding: 20px;
         }
 
-        /* 日曆 */
-        .calendar {
-            background: var(--dk-white);
-            border-radius: var(--dk-radius);
-            padding: 25px;
-            box-shadow: var(--dk-shadow);
-        }
-
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--dk-light);
-        }
-
-        .calendar-nav {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .calendar-title {
-            font-size: 22px;
-            font-weight: 600;
-            color: var(--dk-primary);
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-        }
-
-        .weekday {
-            text-align: center;
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--dk-secondary);
-            padding: 10px;
-        }
-
-        .calendar-date {
+        .shift-item {
+            padding: 12px;
             background: var(--dk-gray-light);
             border-radius: 8px;
-            padding: 10px;
-            min-height: 100px;
-            cursor: pointer;
-            transition: var(--dk-transition);
-            display: flex;
-            flex-direction: column;
-            position: relative;
+            margin-bottom: 10px;
         }
 
-        .calendar-date:hover {
+        .shift-time {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dk-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shift-employees {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .employee-badge {
             background: var(--dk-light);
-            transform: scale(1.02);
+            color: var(--dk-primary);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .employee-badge.me {
+            background: var(--dk-accent);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* 空狀態 */
+        .empty-state {
+            background: var(--dk-white);
+            border-radius: var(--dk-radius);
+            padding: 60px 20px;
+            text-align: center;
             box-shadow: var(--dk-shadow);
         }
 
-        .calendar-date.today {
-            background: var(--dk-light);
-            border: 2px solid var(--dk-primary);
-        }
-
-        .date-number {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--dk-primary);
-            margin-bottom: 8px;
-        }
-
-        .date-schedules {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1;
-        }
-
-        .schedule-chip {
-            background: var(--dk-accent);
-            color: white;
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .schedule-count {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 1px 5px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        /* 模態框 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 61, 82, 0.7);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: var(--dk-white);
-            border-radius: var(--dk-radius);
-            max-width: 600px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0, 61, 82, 0.2);
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 2px solid var(--dk-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--dk-gray-light);
-        }
-
-        .modal-header h3 {
-            color: var(--dk-primary);
-            font-size: 20px;
-        }
-
-        .modal-body {
-            padding: 25px;
-        }
-
-        .modal-footer {
-            padding: 20px;
-            border-top: 2px solid var(--dk-light);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            background: var(--dk-gray-light);
-        }
-
-        /* 表單 */
-        .form-group {
+        .empty-icon {
+            font-size: 64px;
             margin-bottom: 20px;
         }
 
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
+        .empty-title {
+            font-size: 20px;
             font-weight: 600;
+            margin-bottom: 10px;
             color: var(--dk-primary);
-            font-size: 14px;
         }
 
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid var(--dk-gray);
-            border-radius: 6px;
-            font-size: 14px;
-            transition: var(--dk-transition);
-            background: var(--dk-white);
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--dk-primary);
-            box-shadow: 0 0 0 3px rgba(188, 219, 228, 0.3);
-        }
-
-        /* 時間選擇器群組 */
-        .time-group {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .time-separator {
-            color: var(--dk-secondary);
-            font-weight: 600;
-        }
-
-        /* 員工選擇清單 */
-        .employee-select-list {
-            border: 2px solid var(--dk-gray);
-            border-radius: 8px;
-            padding: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-            background: var(--dk-gray-light);
-        }
-
-        .employee-checkbox {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            margin-bottom: 5px;
-            background: var(--dk-white);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: var(--dk-transition);
-        }
-
-        .employee-checkbox:hover {
-            background: var(--dk-light);
-        }
-
-        .employee-checkbox input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin-right: 12px;
-            accent-color: var(--dk-primary);
-        }
-
-        .employee-checkbox label {
-            flex: 1;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* 已排班列表 */
-        .scheduled-list {
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--dk-gray-light);
-            border-radius: 8px;
-            border: 2px solid var(--dk-light);
-        }
-
-        .scheduled-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            margin-bottom: 8px;
-            background: var(--dk-white);
-            border-radius: 6px;
-            transition: var(--dk-transition);
-        }
-
-        .scheduled-item:hover {
-            box-shadow: var(--dk-shadow);
-        }
-
-        .scheduled-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .scheduled-name {
-            font-weight: 600;
-            color: var(--dk-primary);
-            font-size: 14px;
-        }
-
-        .scheduled-time {
-            font-size: 12px;
-            color: var(--dk-secondary);
-            margin-top: 2px;
-        }
-
-        /* 快速設定 */
-        .quick-settings {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .preset-shift {
-            padding: 10px;
-            text-align: center;
-            background: var(--dk-gray-light);
-            border: 2px solid var(--dk-gray);
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: var(--dk-transition);
+        .empty-text {
             color: var(--dk-gray-dark);
         }
 
-        .preset-shift:hover {
-            background: var(--dk-light);
-            border-color: var(--dk-primary);
+        .no-schedule {
+            text-align: center;
+            color: var(--dk-gray-dark);
+            padding: 30px;
+        }
+
+        /* 列表檢視 */
+        .list-view {
+            background: var(--dk-white);
+            border-radius: var(--dk-radius);
+            overflow: hidden;
+            box-shadow: var(--dk-shadow);
+        }
+
+        .list-header {
+            display: grid;
+            grid-template-columns: 100px 150px 1fr 100px;
+            padding: 15px 20px;
+            background: var(--dk-gray-light);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--dk-gray-dark);
+            border-bottom: 2px solid var(--dk-light);
+        }
+
+        .list-item {
+            display: grid;
+            grid-template-columns: 100px 150px 1fr 100px;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--dk-gray);
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .list-item:hover {
+            background: var(--dk-gray-light);
+        }
+
+        .list-date {
+            font-weight: 600;
             color: var(--dk-primary);
         }
 
-        .preset-shift.active {
-            background: var(--dk-primary);
-            border-color: var(--dk-primary);
-            color: white;
+        .list-time {
+            color: var(--dk-accent);
+            font-weight: 500;
         }
 
         /* 載入動畫 */
         .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 40px;
+            height: 40px;
             border: 3px solid var(--dk-gray);
             border-top-color: var(--dk-primary);
             border-radius: 50%;
@@ -662,640 +379,125 @@
             to { transform: rotate(360deg); }
         }
 
-        /* 通知 */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--dk-primary);
-            color: white;
-            padding: 14px 24px;
-            border-radius: 8px;
-            opacity: 0;
-            transition: var(--dk-transition);
-            z-index: 2000;
-            box-shadow: 0 4px 20px rgba(0, 61, 82, 0.3);
-            font-weight: 500;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .toast.error {
-            background: #DC3545;
-        }
-
-        .toast.success {
-            background: #28A745;
-        }
-
-        .toast.warning {
-            background: var(--dk-accent);
-        }
-
         /* 響應式設計 */
         @media (max-width: 768px) {
-            .main {
-                grid-template-columns: 1fr;
+            .header h1 {
+                font-size: 24px;
             }
             
-            .header-top {
+            .schedule-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .control-group {
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: stretch;
             }
 
-            .sync-actions {
+            .form-select {
+                width: 100%;
+            }
+
+            .list-header,
+            .list-item {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
 
-            .quick-settings {
-                grid-template-columns: 1fr;
-            }
-
-            .calendar-grid {
-                grid-template-columns: repeat(7, 1fr);
-                gap: 5px;
-            }
-
-            .calendar-date {
-                min-height: 60px;
-                padding: 5px;
-            }
-
-            .date-number {
-                font-size: 12px;
-            }
-
-            .schedule-chip {
-                font-size: 9px;
-                padding: 2px 4px;
-            }
-        }
-
-        /* 列印樣式 */
-        @media print {
-            .header-actions,
-            .sheets-panel,
-            .sidebar,
-            .btn {
-                display: none !important;
-            }
-            
-            .main {
-                grid-template-columns: 1fr;
-            }
-
-            .calendar {
-                box-shadow: none;
-                border: 1px solid #ddd;
+            .list-header {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app">
-        <!-- 頂部導航 -->
-        <header class="header">
-            <div class="header-top">
-                <h1>
-                    📅 智能排班管理系統
-                    <span class="brand-badge">DK0124</span>
-                </h1>
-                <div class="sheets-status">
-                    <span class="status-dot" id="syncStatus"></span>
-                    <span id="syncText">連線中...</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Google Sheets 控制面板 -->
-        <div class="sheets-panel">
-            <h3>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                    <path d="M19 11V9L12 2L5 9V11H7V19H17V11H19Z" fill="#34A853"/>
-                    <path d="M7 11H17V19H7V11Z" fill="#4285F4"/>
-                </svg>
-                Google Sheets 雲端同步
-            </h3>
-            <div class="sync-actions">
-                <button class="btn btn-accent" onclick="App.syncToSheets()" id="uploadBtn">
-                    ⬆️ 上傳到雲端
-                </button>
-                <button class="btn btn-primary" onclick="App.loadFromSheets()" id="downloadBtn">
-                    ⬇️ 從雲端載入
-                </button>
-                <button class="btn btn-secondary" onclick="App.toggleAutoSync()" id="autoSyncBtn">
-                    🔄 自動同步：關
-                </button>
-                <button class="btn btn-light" onclick="window.open('employee-view.html', '_blank')">
-                    👥 員工檢視
-                </button>
-            </div>
-            <div style="margin-top: 10px; font-size: 13px; color: var(--dk-gray-dark);">
-                最後同步：<span id="lastSync">尚未同步</span>
+    <div class="container">
+        <!-- 標題區 -->
+        <div class="header">
+            <h1>📅 排班查詢系統</h1>
+            <p>查看您的排班資訊 - DK0124</p>
+            <div class="last-update" id="lastUpdate">
+                最後更新：載入中...
             </div>
         </div>
 
-        <!-- 主要內容 -->
-        <main class="main">
-            <!-- 側邊欄 -->
-            <aside class="sidebar">
-                <!-- 時段管理 -->
-                <div class="sidebar-card">
-                    <h2>⏰ 班次時段管理</h2>
-                    <div class="shift-list" id="shiftList"></div>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="App.openShiftModal()">
-                        + 新增自訂時段
-                    </button>
-                </div>
-
-                <!-- 員工管理 -->
-                <div class="sidebar-card">
-                    <h2>👥 員工管理</h2>
-                    <button class="btn btn-accent" style="width: 100%; margin-bottom: 15px;" onclick="App.openEmployeeModal()">
-                        + 新增員工
-                    </button>
-                    <div class="employee-list" id="employeeList"></div>
-                </div>
-            </aside>
-
-            <!-- 日曆 -->
-            <section class="calendar">
-                <div class="calendar-header">
-                    <div class="calendar-nav">
-                        <button class="btn btn-outline" onclick="App.previousMonth()">◀</button>
-                        <h2 class="calendar-title" id="currentMonth"></h2>
-                        <button class="btn btn-outline" onclick="App.nextMonth()">▶</button>
-                    </div>
-                    <div>
-                        <button class="btn btn-light" onclick="App.exportCSV()">
-                            📊 匯出 CSV
-                        </button>
-                        <button class="btn btn-light" onclick="window.print()">
-                            🖨️ 列印
-                        </button>
-                    </div>
-                </div>
-                <div class="calendar-grid" id="calendar"></div>
-            </section>
-        </main>
-    </div>
-
-    <!-- 員工模態框 -->
-    <div class="modal" id="employeeModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>員工資料</h3>
-                <button class="btn btn-light" onclick="App.closeModal('employeeModal')">✕</button>
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="control-group">
+                <select class="form-select" id="employeeSelect">
+                    <option value="">選擇員工查看排班</option>
+                    <option value="all">查看所有員工</option>
+                </select>
+                <select class="form-select" id="monthSelect">
+                    <!-- 動態生成月份選項 -->
+                </select>
+                <button class="btn btn-primary" onclick="EmployeeView.loadSchedule()">
+                    🔍 查詢排班
+                </button>
+                <button class="btn btn-accent" onclick="EmployeeView.refresh()">
+                    🔄 重新整理
+                </button>
             </div>
-            <div class="modal-body">
-                <form id="employeeForm">
-                    <div class="form-group">
-                        <label class="form-label">姓名 *</label>
-                        <input type="text" class="form-control" id="employeeName" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">類型</label>
-                        <select class="form-control" id="employeeType">
-                            <option value="fulltime">正職</option>
-                            <option value="parttime">兼職 (PT)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">電話</label>
-                        <input type="tel" class="form-control" id="employeePhone">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="employeeEmail">
-                    </div>
-                </form>
+        </div>
+
+        <!-- 統計區 -->
+        <div class="stats-container" id="statsContainer" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="totalShifts">0</div>
+                <div class="stat-label">本月總班次</div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-light" onclick="App.closeModal('employeeModal')">取消</button>
-                <button class="btn btn-accent" onclick="App.deleteEmployee()" id="deleteEmployeeBtn" style="display: none;">刪除</button>
-                <button class="btn btn-primary" onclick="App.saveEmployee()">儲存</button>
+            <div class="stat-card">
+                <div class="stat-value" id="totalHours">0</div>
+                <div class="stat-label">總工時（小時）</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="morningShifts">0</div>
+                <div class="stat-label">早班次數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="eveningShifts">0</div>
+                <div class="stat-label">晚班次數</div>
+            </div>
+        </div>
+
+        <!-- 檢視切換 -->
+        <div class="view-toggle" id="viewToggle" style="display: none;">
+            <button class="view-btn active" onclick="EmployeeView.switchView('grid')">📅 卡片檢視</button>
+            <button class="view-btn" onclick="EmployeeView.switchView('list')">📋 列表檢視</button>
+        </div>
+
+        <!-- 排班顯示區 -->
+        <div id="scheduleContent">
+            <div class="empty-state">
+                <div class="empty-icon">👆</div>
+                <div class="empty-title">請選擇員工</div>
+                <div class="empty-text">選擇員工和月份以查看排班資訊</div>
             </div>
         </div>
     </div>
-
-    <!-- 排班模態框 -->
-    <div class="modal" id="scheduleModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="scheduleTitle">排班設定</h3>
-                <button class="btn btn-light" onclick="App.closeModal('scheduleModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <form id="scheduleForm">
-                    <!-- 快速選擇 -->
-                    <div class="form-group">
-                        <label class="form-label">快速選擇班次</label>
-                        <div class="quick-settings" id="quickShifts"></div>
-                    </div>
-
-                    <!-- 自訂時間 -->
-                    <div class="form-group">
-                        <label class="form-label">自訂時間</label>
-                        <div class="time-group">
-                            <input type="time" class="form-control" id="startTime">
-                            <span class="time-separator">至</span>
-                            <input type="time" class="form-control" id="endTime">
-                        </div>
-                    </div>
-
-                    <!-- 員工多選 -->
-                    <div class="form-group">
-                        <label class="form-label">選擇員工（可多選）</label>
-                        <div class="employee-select-list" id="employeeSelectList"></div>
-                    </div>
-
-                    <!-- 備註 -->
-                    <div class="form-group">
-                        <label class="form-label">備註</label>
-                        <textarea class="form-control" id="scheduleNotes" rows="2" placeholder="輸入備註..."></textarea>
-                    </div>
-
-                    <!-- 已排班列表 -->
-                    <div class="scheduled-list">
-                        <h4 style="margin-bottom: 10px; color: var(--dk-primary);">當日已排班</h4>
-                        <div id="currentSchedules"></div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-accent" onclick="App.clearDaySchedule()">清空當日</button>
-                <button class="btn btn-light" onclick="App.closeModal('scheduleModal')">取消</button>
-                <button class="btn btn-primary" onclick="App.saveSchedule()">儲存排班</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 時段管理模態框 -->
-    <div class="modal" id="shiftModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>新增自訂時段</h3>
-                <button class="btn btn-light" onclick="App.closeModal('shiftModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <form id="shiftForm">
-                    <div class="form-group">
-                        <label class="form-label">時段名稱 *</label>
-                        <input type="text" class="form-control" id="shiftName" placeholder="例如：大夜班">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">時間範圍</label>
-                        <div class="time-group">
-                            <input type="time" class="form-control" id="shiftStartTime">
-                            <span class="time-separator">至</span>
-                            <input type="time" class="form-control" id="shiftEndTime">
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-light" onclick="App.closeModal('shiftModal')">取消</button>
-                <button class="btn btn-primary" onclick="App.saveShift()">儲存時段</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 通知 -->
-    <div class="toast" id="toast"></div>
 
     <script>
-        // 應用程式主物件
-        const App = {
-            // 資料
+        // 員工檢視應用程式
+        const EmployeeView = {
             employees: [],
             schedules: {},
             shifts: [],
-            currentMonth: new Date(),
-            currentDate: null,
-            editingEmployee: null,
+            currentView: 'grid',
+            selectedEmployee: null,
+            selectedMonth: null,
             
-            // Google Sheets 設定 (您提供的網址)
-            scriptUrl: 'https://script.google.com/macros/s/AKfycbyYCnrYAiYylH57XAwFPeDwi6pQa1FEEBAVUlFly-vgvfgit3sX9l9QAwvaetuWO92d3A/exec',
-            isConnected: false,
-            autoSyncEnabled: false,
-            autoSyncInterval: null,
-            
-            // 初始化
-            async init() {
+            init() {
                 this.loadData();
-                this.initDefaultShifts();
-                this.renderCalendar();
-                this.renderEmployees();
-                this.renderShifts();
-                await this.testConnection();
-                this.loadLastSync();
+                this.setupMonthSelector();
+                this.renderEmployeeSelector();
+                this.updateLastSync();
                 
-                // 監聽 localStorage 變化
-                window.addEventListener('storage', (e) => {
-                    if (e.key === 'scheduleData') {
-                        this.loadData();
-                        this.renderCalendar();
-                        this.renderEmployees();
-                    }
-                });
-
-                // ESC 關閉模態框
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') {
-                        document.querySelectorAll('.modal.show').forEach(modal => {
-                            modal.classList.remove('show');
-                        });
-                    }
-                });
+                // 每30秒自動更新
+                setInterval(() => {
+                    this.refresh();
+                }, 30000);
             },
             
-            // 測試 Google Sheets 連線
-            async testConnection() {
-                try {
-                    const response = await fetch(this.scriptUrl + '?test=true');
-                    if (response.ok) {
-                        this.updateConnectionStatus(true);
-                        this.isConnected = true;
-                    } else {
-                        this.updateConnectionStatus(false);
-                    }
-                } catch (error) {
-                    console.error('連線測試失敗:', error);
-                    this.updateConnectionStatus(false);
-                }
-            },
-            
-            // 更新連線狀態
-            updateConnectionStatus(connected) {
-                const statusDot = document.getElementById('syncStatus');
-                const statusText = document.getElementById('syncText');
-                
-                if (connected) {
-                    statusDot.classList.add('connected');
-                    statusText.textContent = '已連線';
-                } else {
-                    statusDot.classList.remove('connected');
-                    statusText.textContent = '離線';
-                }
-            },
-            
-            // 同步到 Google Sheets
-            async syncToSheets() {
-                const uploadBtn = document.getElementById('uploadBtn');
-                const originalText = uploadBtn.innerHTML;
-                uploadBtn.innerHTML = '<span class="loading"></span> 上傳中...';
-                uploadBtn.disabled = true;
-                
-                try {
-                    const sheetData = this.prepareSheetData();
-                    
-                    const response = await fetch(this.scriptUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain;charset=utf-8',
-                        },
-                        body: JSON.stringify({
-                            data: sheetData,
-                            timestamp: new Date().toISOString()
-                        })
-                    });
-                    
-                    // 更新最後同步時間
-                    const now = new Date();
-                    localStorage.setItem('lastSync', now.toISOString());
-                    this.updateLastSync(now);
-                    
-                    this.showToast('資料已成功上傳到 Google Sheets！', 'success');
-                    
-                } catch (error) {
-                    // CORS 錯誤但資料可能已成功上傳
-                    const now = new Date();
-                    localStorage.setItem('lastSync', now.toISOString());
-                    this.updateLastSync(now);
-                    this.showToast('資料已發送到雲端', 'success');
-                } finally {
-                    uploadBtn.innerHTML = originalText;
-                    uploadBtn.disabled = false;
-                }
-            },
-            
-            // 從 Google Sheets 載入
-            async loadFromSheets() {
-                const downloadBtn = document.getElementById('downloadBtn');
-                const originalText = downloadBtn.innerHTML;
-                downloadBtn.innerHTML = '<span class="loading"></span> 載入中...';
-                downloadBtn.disabled = true;
-                
-                try {
-                    const response = await fetch(this.scriptUrl);
-                    const result = await response.json();
-                    
-                    if (result.success && result.data) {
-                        this.parseSheetData(result.data);
-                        this.saveData();
-                        this.renderCalendar();
-                        this.renderEmployees();
-                        this.renderShifts();
-                        this.showToast('已從 Google Sheets 載入資料！', 'success');
-                    } else {
-                        throw new Error('資料格式錯誤');
-                    }
-                    
-                } catch (error) {
-                    console.error('載入失敗:', error);
-                    this.showToast('載入失敗，請確認試算表內容', 'error');
-                } finally {
-                    downloadBtn.innerHTML = originalText;
-                    downloadBtn.disabled = false;
-                }
-            },
-            
-            // 準備試算表資料
-            prepareSheetData() {
-                const data = [];
-                
-                // 標題
-                data.push(['DK0124 排班系統資料']);
-                data.push(['匯出時間', new Date().toLocaleString('zh-TW')]);
-                data.push([]);
-                
-                // 員工資料
-                data.push(['=== 員工資料 ===']);
-                data.push(['ID', '姓名', '類型', '電話', 'Email']);
-                this.employees.forEach(emp => {
-                    data.push([
-                        emp.id,
-                        emp.name,
-                        emp.type === 'fulltime' ? '正職' : 'PT',
-                        emp.phone || '',
-                        emp.email || ''
-                    ]);
-                });
-                
-                data.push([]);
-                
-                // 班次設定
-                data.push(['=== 班次設定 ===']);
-                data.push(['ID', '名稱', '開始時間', '結束時間']);
-                this.shifts.forEach(shift => {
-                    data.push([
-                        shift.id,
-                        shift.name,
-                        shift.startTime,
-                        shift.endTime
-                    ]);
-                });
-                
-                data.push([]);
-                
-                // 排班資料
-                data.push(['=== 排班資料 ===']);
-                data.push(['日期', '員工ID', '員工姓名', '開始時間', '結束時間', '備註']);
-                
-                const sortedDates = Object.keys(this.schedules).sort();
-                sortedDates.forEach(date => {
-                    this.schedules[date].forEach(schedule => {
-                        const employee = this.employees.find(e => e.id === schedule.employeeId);
-                        data.push([
-                            date,
-                            schedule.employeeId,
-                            employee ? employee.name : '未知',
-                            schedule.startTime,
-                            schedule.endTime,
-                            schedule.notes || ''
-                        ]);
-                    });
-                });
-                
-                return data;
-            },
-            
-            // 解析試算表資料
-            parseSheetData(data) {
-                this.employees = [];
-                this.shifts = [];
-                this.schedules = {};
-                
-                let section = '';
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    if (!row || row.length === 0) continue;
-                    
-                    if (row[0] === '=== 員工資料 ===') {
-                        section = 'employees';
-                        i++; // 跳過標題行
-                        continue;
-                    } else if (row[0] === '=== 班次設定 ===') {
-                        section = 'shifts';
-                        i++; // 跳過標題行
-                        continue;
-                    } else if (row[0] === '=== 排班資料 ===') {
-                        section = 'schedules';
-                        i++; // 跳過標題行
-                        continue;
-                    }
-                    
-                    if (section === 'employees' && row[0] && row[0] !== 'ID') {
-                        this.employees.push({
-                            id: parseInt(row[0]) || Date.now() + Math.random(),
-                            name: row[1],
-                            type: row[2] === '正職' ? 'fulltime' : 'parttime',
-                            phone: row[3] || '',
-                            email: row[4] || ''
-                        });
-                    } else if (section === 'shifts' && row[0] && row[0] !== 'ID') {
-                        this.shifts.push({
-                            id: parseInt(row[0]) || Date.now() + Math.random(),
-                            name: row[1],
-                            startTime: row[2],
-                            endTime: row[3]
-                        });
-                    } else if (section === 'schedules' && row[0] && row[0] !== '日期') {
-                        const date = row[0];
-                        if (!this.schedules[date]) {
-                            this.schedules[date] = [];
-                        }
-                        
-                        this.schedules[date].push({
-                            employeeId: parseInt(row[1]),
-                            startTime: row[3],
-                            endTime: row[4],
-                            notes: row[5] || ''
-                        });
-                    }
-                }
-                
-                // 如果沒有班次資料，初始化預設班次
-                if (this.shifts.length === 0) {
-                    this.initDefaultShifts();
-                }
-            },
-            
-            // 切換自動同步
-            toggleAutoSync() {
-                this.autoSyncEnabled = !this.autoSyncEnabled;
-                const btn = document.getElementById('autoSyncBtn');
-                
-                if (this.autoSyncEnabled) {
-                    this.autoSyncInterval = setInterval(() => {
-                        this.syncToSheets();
-                    }, 5 * 60 * 1000); // 每5分鐘
-                    
-                    btn.innerHTML = '⏸️ 自動同步：開';
-                    btn.classList.remove('btn-secondary');
-                    btn.classList.add('btn-accent');
-                    this.showToast('已啟用自動同步（每5分鐘）', 'success');
-                } else {
-                    if (this.autoSyncInterval) {
-                        clearInterval(this.autoSyncInterval);
-                        this.autoSyncInterval = null;
-                    }
-                    
-                    btn.innerHTML = '🔄 自動同步：關';
-                    btn.classList.remove('btn-accent');
-                    btn.classList.add('btn-secondary');
-                    this.showToast('已停用自動同步', 'info');
-                }
-                
-                localStorage.setItem('autoSync', this.autoSyncEnabled);
-            },
-            
-            // 載入最後同步時間
-            loadLastSync() {
-                const lastSync = localStorage.getItem('lastSync');
-                if (lastSync) {
-                    this.updateLastSync(new Date(lastSync));
-                }
-                
-                // 載入自動同步設定
-                const autoSync = localStorage.getItem('autoSync') === 'true';
-                if (autoSync) {
-                    this.toggleAutoSync();
-                }
-            },
-            
-            // 更新最後同步時間顯示
-            updateLastSync(date) {
-                document.getElementById('lastSync').textContent = date.toLocaleString('zh-TW');
-            },
-            
-            // 初始化預設班次
-            initDefaultShifts() {
-                if (this.shifts.length === 0) {
-                    this.shifts = [
-                        { id: 1, name: '早班', startTime: '06:00', endTime: '14:00' },
-                        { id: 2, name: '午班', startTime: '14:00', endTime: '22:00' },
-                        { id: 3, name: '晚班', startTime: '22:00', endTime: '06:00' }
-                    ];
-                    this.saveData();
-                }
-            },
-            
-            // 載入資料
             loadData() {
                 const saved = localStorage.getItem('scheduleData');
                 if (saved) {
@@ -1303,387 +505,294 @@
                     this.employees = data.employees || [];
                     this.schedules = data.schedules || {};
                     this.shifts = data.shifts || [];
-                } else {
-                    // 預設資料
-                    this.employees = [
-                        { id: 1, name: '王小明', type: 'fulltime', phone: '0912345678', email: 'ming@example.com' },
-                        { id: 2, name: '李小華', type: 'fulltime', phone: '0923456789', email: 'hua@example.com' },
-                        { id: 3, name: '張大偉', type: 'parttime', phone: '0934567890', email: 'wei@example.com' }
-                    ];
-                    this.saveData();
                 }
             },
             
-            // 儲存資料
-            saveData() {
-                const data = {
-                    employees: this.employees,
-                    schedules: this.schedules,
-                    shifts: this.shifts,
-                    lastUpdated: new Date().toISOString()
-                };
-                localStorage.setItem('scheduleData', JSON.stringify(data));
-            },
-            
-            // 渲染班次列表
-            renderShifts() {
-                const shiftList = document.getElementById('shiftList');
-                shiftList.innerHTML = '';
+            setupMonthSelector() {
+                const select = document.getElementById('monthSelect');
+                const currentDate = new Date();
+                const currentYear = currentDate.getFullYear();
+                const currentMonth = currentDate.getMonth();
                 
-                this.shifts.forEach(shift => {
-                    const div = document.createElement('div');
-                    div.className = 'shift-item';
-                    div.innerHTML = `
-                        <div>
-                            <div class="shift-name">${shift.name}</div>
-                            <div class="shift-time">${shift.startTime} - ${shift.endTime}</div>
-                        </div>
-                        ${shift.id > 3 ? `<button class="btn btn-accent" style="padding: 4px 8px; font-size: 12px;" onclick="App.deleteShift(${shift.id})">刪除</button>` : ''}
-                    `;
-                    shiftList.appendChild(div);
-                });
-            },
-            
-            // 其他功能方法保持不變...
-            openShiftModal() {
-                document.getElementById('shiftForm').reset();
-                document.getElementById('shiftModal').classList.add('show');
-            },
-            
-            saveShift() {
-                const name = document.getElementById('shiftName').value.trim();
-                const startTime = document.getElementById('shiftStartTime').value;
-                const endTime = document.getElementById('shiftEndTime').value;
-                
-                if (!name || !startTime || !endTime) {
-                    this.showToast('請填寫完整資料', 'error');
-                    return;
-                }
-                
-                const newShift = {
-                    id: Date.now(),
-                    name,
-                    startTime,
-                    endTime
-                };
-                
-                this.shifts.push(newShift);
-                this.saveData();
-                this.renderShifts();
-                this.closeModal('shiftModal');
-                this.showToast('時段已新增', 'success');
-            },
-            
-            deleteShift(id) {
-                if (confirm('確定要刪除這個時段嗎？')) {
-                    this.shifts = this.shifts.filter(s => s.id !== id);
-                    this.saveData();
-                    this.renderShifts();
-                    this.showToast('時段已刪除', 'success');
-                }
-            },
-            
-            // 渲染日曆
-            renderCalendar() {
-                const year = this.currentMonth.getFullYear();
-                const month = this.currentMonth.getMonth();
-                const firstDay = new Date(year, month, 1);
-                const lastDay = new Date(year, month + 1, 0);
-                const prevLastDay = new Date(year, month, 0);
-                const firstDayOfWeek = firstDay.getDay();
-                const daysInMonth = lastDay.getDate();
-                const prevDaysInMonth = prevLastDay.getDate();
-                
-                document.getElementById('currentMonth').textContent = `${year}年${month + 1}月`;
-                
-                const calendar = document.getElementById('calendar');
-                calendar.innerHTML = '';
-                
-                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-                weekdays.forEach(day => {
-                    const div = document.createElement('div');
-                    div.className = 'weekday';
-                    div.textContent = day;
-                    calendar.appendChild(div);
-                });
-                
-                for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-                    const date = prevDaysInMonth - i;
-                    const div = this.createDateElement(date, true);
-                    calendar.appendChild(div);
-                }
-                
-                const today = new Date();
-                for (let date = 1; date <= daysInMonth; date++) {
-                    const isToday = year === today.getFullYear() && 
-                                   month === today.getMonth() && 
-                                   date === today.getDate();
-                    const div = this.createDateElement(date, false, isToday);
-                    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                for (let i = -3; i <= 3; i++) {
+                    const date = new Date(currentYear, currentMonth + i, 1);
+                    const option = document.createElement('option');
+                    option.value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    option.textContent = `${date.getFullYear()}年${date.getMonth() + 1}月`;
                     
-                    if (this.schedules[dateKey]) {
-                        const scheduleDiv = document.createElement('div');
-                        scheduleDiv.className = 'date-schedules';
-                        
-                        const timeGroups = {};
-                        this.schedules[dateKey].forEach(schedule => {
-                            const key = `${schedule.startTime}-${schedule.endTime}`;
-                            if (!timeGroups[key]) {
-                                timeGroups[key] = [];
-                            }
-                            timeGroups[key].push(schedule);
-                        });
-                        
-                        Object.entries(timeGroups).forEach(([time, schedules]) => {
-                            const chip = document.createElement('div');
-                            chip.className = 'schedule-chip';
-                            chip.innerHTML = `
-                                <span>${time.split('-')[0]}</span>
-                                <span class="schedule-count">${schedules.length}</span>
-                            `;
-                            chip.title = schedules.map(s => 
-                                this.getEmployeeName(s.employeeId)
-                            ).join(', ');
-                            
-                            scheduleDiv.appendChild(chip);
-                        });
-                        
-                        div.appendChild(scheduleDiv);
+                    if (i === 0) {
+                        option.selected = true;
+                        this.selectedMonth = option.value;
                     }
                     
-                    calendar.appendChild(div);
+                    select.appendChild(option);
                 }
                 
-                const totalCells = calendar.children.length - 7;
-                const remainingCells = 42 - totalCells;
-                for (let date = 1; date <= remainingCells; date++) {
-                    const div = this.createDateElement(date, true);
-                    calendar.appendChild(div);
-                }
+                select.onchange = (e) => {
+                    this.selectedMonth = e.target.value;
+                };
             },
             
-            createDateElement(date, isOtherMonth, isToday) {
-                const div = document.createElement('div');
-                div.className = 'calendar-date';
-                if (isOtherMonth) div.style.opacity = '0.3';
-                if (isToday) div.classList.add('today');
+            renderEmployeeSelector() {
+                const select = document.getElementById('employeeSelect');
                 
-                const dateNumber = document.createElement('div');
-                dateNumber.className = 'date-number';
-                dateNumber.textContent = date;
-                div.appendChild(dateNumber);
-                
-                if (!isOtherMonth) {
-                    div.onclick = () => this.openScheduleModal(date);
+                while (select.options.length > 2) {
+                    select.remove(2);
                 }
-                
-                return div;
-            },
-            
-            openScheduleModal(date) {
-                const year = this.currentMonth.getFullYear();
-                const month = this.currentMonth.getMonth();
-                this.currentDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-                
-                document.getElementById('scheduleTitle').textContent = 
-                    `${year}年${month + 1}月${date}日 排班設定`;
-                
-                const quickShifts = document.getElementById('quickShifts');
-                quickShifts.innerHTML = '';
-                this.shifts.forEach(shift => {
-                    const btn = document.createElement('div');
-                    btn.className = 'preset-shift';
-                    btn.textContent = shift.name;
-                    btn.onclick = () => {
-                        document.querySelectorAll('.preset-shift').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        document.getElementById('startTime').value = shift.startTime;
-                        document.getElementById('endTime').value = shift.endTime;
-                    };
-                    quickShifts.appendChild(btn);
-                });
-                
-                const employeeSelectList = document.getElementById('employeeSelectList');
-                employeeSelectList.innerHTML = '';
                 
                 this.employees.forEach(emp => {
-                    const div = document.createElement('div');
-                    div.className = 'employee-checkbox';
-                    div.innerHTML = `
-                        <input type="checkbox" id="emp_${emp.id}" value="${emp.id}">
-                        <label for="emp_${emp.id}">
-                            <span>${emp.name}</span>
-                            <span style="font-size: 12px; color: var(--dk-secondary);">
-                                ${emp.type === 'fulltime' ? '正職' : 'PT'}
-                            </span>
-                        </label>
-                    `;
-                    employeeSelectList.appendChild(div);
+                    const option = document.createElement('option');
+                    option.value = emp.id;
+                    option.textContent = `${emp.name} (${emp.type === 'fulltime' ? '正職' : 'PT'})`;
+                    select.appendChild(option);
                 });
                 
-                this.loadCurrentSchedules();
-                
-                document.getElementById('startTime').value = '';
-                document.getElementById('endTime').value = '';
-                document.getElementById('scheduleNotes').value = '';
-                
-                document.getElementById('scheduleModal').classList.add('show');
+                select.onchange = (e) => {
+                    this.selectedEmployee = e.target.value;
+                };
             },
             
-            loadCurrentSchedules() {
-                const currentSchedules = document.getElementById('currentSchedules');
-                currentSchedules.innerHTML = '';
+            updateLastSync() {
+                const saved = localStorage.getItem('scheduleData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    const lastUpdate = new Date(data.lastUpdated);
+                    document.getElementById('lastUpdate').textContent = 
+                        `最後更新：${lastUpdate.toLocaleString('zh-TW')}`;
+                }
+            },
+            
+            refresh() {
+                this.loadData();
+                this.renderEmployeeSelector();
+                this.updateLastSync();
+                if (this.selectedEmployee) {
+                    this.loadSchedule();
+                }
+            },
+            
+            loadSchedule() {
+                if (!this.selectedEmployee || !this.selectedMonth) {
+                    this.showEmpty('請選擇員工和月份');
+                    return;
+                }
                 
-                const schedules = this.schedules[this.currentDate] || [];
+                document.getElementById('statsContainer').style.display = 'grid';
+                document.getElementById('viewToggle').style.display = 'flex';
+                
+                const schedules = this.getEmployeeSchedules();
+                this.updateStats(schedules);
                 
                 if (schedules.length === 0) {
-                    currentSchedules.innerHTML = '<div style="text-align: center; color: var(--dk-gray-dark);">尚無排班</div>';
-                    return;
-                }
-                
-                schedules.forEach((schedule, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'scheduled-item';
-                    div.innerHTML = `
-                        <div class="scheduled-info">
-                            <span class="scheduled-name">${this.getEmployeeName(schedule.employeeId)}</span>
-                            <span class="scheduled-time">${schedule.startTime} - ${schedule.endTime}</span>
-                        </div>
-                        <button class="btn btn-accent" style="padding: 4px 8px; font-size: 12px;" onclick="App.removeSchedule(${index})">移除</button>
-                    `;
-                    currentSchedules.appendChild(div);
-                });
-            },
-            
-            removeSchedule(index) {
-                if (this.schedules[this.currentDate]) {
-                    this.schedules[this.currentDate].splice(index, 1);
-                    if (this.schedules[this.currentDate].length === 0) {
-                        delete this.schedules[this.currentDate];
-                    }
-                    this.saveData();
-                    this.loadCurrentSchedules();
-                    this.renderCalendar();
-                    this.showToast('已移除排班', 'success');
+                    this.showEmpty('本月無排班');
+                } else {
+                    this.renderSchedules(schedules);
                 }
             },
             
-            clearDaySchedule() {
-                if (confirm('確定要清空當日所有排班嗎？')) {
-                    delete this.schedules[this.currentDate];
-                    this.saveData();
-                    this.loadCurrentSchedules();
-                    this.renderCalendar();
-                    this.showToast('已清空當日排班', 'success');
-                }
-            },
-            
-            saveSchedule() {
-                const startTime = document.getElementById('startTime').value;
-                const endTime = document.getElementById('endTime').value;
-                const notes = document.getElementById('scheduleNotes').value.trim();
+            getEmployeeSchedules() {
+                const schedules = [];
                 
-                const selectedEmployees = [];
-                document.querySelectorAll('.employee-checkbox input:checked').forEach(checkbox => {
-                    selectedEmployees.push(parseInt(checkbox.value));
-                });
-                
-                if (selectedEmployees.length === 0) {
-                    this.showToast('請選擇至少一位員工', 'error');
-                    return;
-                }
-                
-                if (!startTime || !endTime) {
-                    this.showToast('請設定時間', 'error');
-                    return;
-                }
-                
-                if (!this.schedules[this.currentDate]) {
-                    this.schedules[this.currentDate] = [];
-                }
-                
-                selectedEmployees.forEach(employeeId => {
-                    const hasConflict = this.schedules[this.currentDate].some(s => 
-                        s.employeeId === employeeId && 
-                        this.isTimeOverlap(s.startTime, s.endTime, startTime, endTime)
-                    );
-                    
-                    if (!hasConflict) {
-                        this.schedules[this.currentDate].push({
-                            employeeId,
-                            startTime,
-                            endTime,
-                            notes
+                Object.entries(this.schedules).forEach(([date, daySchedules]) => {
+                    if (date.startsWith(this.selectedMonth)) {
+                        daySchedules.forEach(schedule => {
+                            if (this.selectedEmployee === 'all' || 
+                                schedule.employeeId == this.selectedEmployee) {
+                                schedules.push({
+                                    date,
+                                    ...schedule,
+                                    employeeName: this.getEmployeeName(schedule.employeeId)
+                                });
+                            }
                         });
                     }
                 });
                 
-                this.saveData();
-                this.renderCalendar();
-                this.loadCurrentSchedules();
-                this.showToast('排班已儲存', 'success');
+                return schedules.sort((a, b) => a.date.localeCompare(b.date));
+            },
+            
+            updateStats(schedules) {
+                let totalHours = 0;
+                let morningCount = 0;
+                let eveningCount = 0;
                 
-                document.querySelectorAll('.employee-checkbox input:checked').forEach(checkbox => {
-                    checkbox.checked = false;
+                schedules.forEach(schedule => {
+                    const hours = this.calculateHours(schedule.startTime, schedule.endTime);
+                    totalHours += hours;
+                    
+                    const startHour = parseInt(schedule.startTime.split(':')[0]);
+                    if (startHour < 12) {
+                        morningCount++;
+                    } else {
+                        eveningCount++;
+                    }
                 });
+                
+                document.getElementById('totalShifts').textContent = schedules.length;
+                document.getElementById('totalHours').textContent = Math.round(totalHours);
+                document.getElementById('morningShifts').textContent = morningCount;
+                document.getElementById('eveningShifts').textContent = eveningCount;
             },
             
-            isTimeOverlap(start1, end1, start2, end2) {
-                const s1 = this.timeToMinutes(start1);
-                const e1 = this.timeToMinutes(end1);
-                const s2 = this.timeToMinutes(start2);
-                const e2 = this.timeToMinutes(end2);
+            calculateHours(startTime, endTime) {
+                const [startH, startM] = startTime.split(':').map(Number);
+                const [endH, endM] = endTime.split(':').map(Number);
                 
-                if (e1 < s1) e1 += 1440;
-                if (e2 < s2) e2 += 1440;
+                let hours = endH - startH;
+                let minutes = endM - startM;
                 
-                return (s1 < e2 && s2 < e1);
-            },
-            
-            timeToMinutes(time) {
-                const [hours, minutes] = time.split(':').map(Number);
-                return hours * 60 + minutes;
-            },
-            
-            renderEmployees() {
-                const list = document.getElementById('employeeList');
-                list.innerHTML = '';
-                
-                if (this.employees.length === 0) {
-                    list.innerHTML = '<div style="text-align: center; color: var(--dk-gray-dark); padding: 20px;">尚無員工資料</div>';
-                    return;
+                if (minutes < 0) {
+                    hours--;
+                    minutes += 60;
                 }
                 
-                this.employees.forEach(employee => {
-                    const div = document.createElement('div');
-                    div.className = 'employee-item';
+                if (hours < 0) {
+                    hours += 24;
+                }
+                
+                return hours + minutes / 60;
+            },
+            
+            renderSchedules(schedules) {
+                const content = document.getElementById('scheduleContent');
+                
+                if (this.currentView === 'grid') {
+                    this.renderGridView(schedules, content);
+                } else {
+                    this.renderListView(schedules, content);
+                }
+            },
+            
+            renderGridView(schedules, container) {
+                const groupedSchedules = {};
+                schedules.forEach(schedule => {
+                    if (!groupedSchedules[schedule.date]) {
+                        groupedSchedules[schedule.date] = [];
+                    }
+                    groupedSchedules[schedule.date].push(schedule);
+                });
+                
+                let html = '<div class="schedule-grid">';
+                
+                Object.entries(groupedSchedules).forEach(([date, daySchedules]) => {
+                    const dateObj = new Date(date + 'T00:00:00');
+                    const weekdays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+                    const isToday = date === new Date().toISOString().split('T')[0];
                     
-                    div.innerHTML = `
-                        <div style="display: flex; align-items: center;">
-                            <div class="employee-avatar">${employee.name[0]}</div>
-                            <div class="employee-info">
-                                <div class="employee-name">${employee.name}</div>
-                                <div class="employee-meta">${employee.phone || '無電話'}</div>
+                    html += `
+                        <div class="schedule-card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-date">${dateObj.getDate()}日</div>
+                                    <div class="card-weekday">${weekdays[dateObj.getDay()]}</div>
+                                </div>
+                                ${isToday ? '<span class="today-badge">今天</span>' : ''}
                             </div>
-                        </div>
-                        <span class="employee-badge ${employee.type === 'parttime' ? 'parttime' : ''}">
-                            ${employee.type === 'fulltime' ? '正職' : 'PT'}
-                        </span>
+                            <div class="card-body">
                     `;
                     
-                    div.onclick = () => this.editEmployee(employee);
-                    list.appendChild(div);
+                    const timeGroups = {};
+                    daySchedules.forEach(schedule => {
+                        const key = `${schedule.startTime}-${schedule.endTime}`;
+                        if (!timeGroups[key]) {
+                            timeGroups[key] = [];
+                        }
+                        timeGroups[key].push(schedule);
+                    });
+                    
+                    Object.entries(timeGroups).forEach(([time, schedules]) => {
+                        html += `
+                            <div class="shift-item">
+                                <div class="shift-time">
+                                    🕐 ${time}
+                                </div>
+                                <div class="shift-employees">
+                        `;
+                        
+                        schedules.forEach(schedule => {
+                            const isMe = schedule.employeeId == this.selectedEmployee;
+                            html += `<span class="employee-badge ${isMe ? 'me' : ''}">${schedule.employeeName}</span>`;
+                        });
+                        
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
                 });
+                
+                html += '</div>';
+                container.innerHTML = html;
             },
             
-            openEmployeeModal() {
-                document.getElementById('employeeForm').reset();
-                this.editingEmployee = null;
-                document.getElementById('deleteEmployeeBtn').style.display = 'none';
-                document.getElementById('employeeModal').classList.add('show');
+            renderListView(schedules, container) {
+                let html = `
+                    <div class="list-view">
+                        <div class="list-header">
+                            <div>日期</div>
+                            <div>時間</div>
+                            <div>員工</div>
+                            <div>工時</div>
+                        </div>
+                `;
+                
+                schedules.forEach(schedule => {
+                    const dateObj = new Date(schedule.date + 'T00:00:00');
+                    const hours = this.calculateHours(schedule.startTime, schedule.endTime);
+                    
+                    html += `
+                        <div class="list-item">
+                            <div class="list-date">${dateObj.getMonth() + 1}/${dateObj.getDate()}</div>
+                            <div class="list-time">${schedule.startTime} - ${schedule.endTime}</div>
+                            <div>${schedule.employeeName}</div>
+                            <div>${hours.toFixed(1)}h</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
             },
             
-            editEmployee(employee) {
-                this.editingEmployee = employee;
-                document.getElementById('employeeName').value = employee.name;
-                document.getElementById('employeeType
+            switchView(view) {
+                this.currentView = view;
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                if (this.selectedEmployee) {
+                    this.loadSchedule();
+                }
+            },
+            
+            showEmpty(message) {
+                document.getElementById('statsContainer').style.display = 'none';
+                document.getElementById('viewToggle').style.display = 'none';
+                document.getElementById('scheduleContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-title">${message}</div>
+                        <div class="empty-text">請確認選擇條件或聯繫管理員</div>
+                    </div>
+                `;
+            },
+            
+            getEmployeeName(id) {
+                const emp = this.employees.find(e => e.id == id);
+                return emp ? emp.name : '未知';
+            }
+        };
+        
+        // 啟動應用程式
+        document.addEventListener('DOMContentLoaded', () => {
+            EmployeeView.init();
+        });
+    </script>
+</body>
+</html>

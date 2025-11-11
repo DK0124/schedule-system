@@ -1,7 +1,7 @@
 {
   "name": "schedule-system",
-  "version": "1.0.0",
-  "description": "智能排班管理系統 - 純前端實作",
+  "version": "2.0.0",
+  "description": "智能排班管理系統 - Google Sheets 整合版",
   "main": "index.html",
   "author": "DK0124",
   "license": "MIT",
@@ -10,10 +10,19 @@
     "employee",
     "management",
     "calendar",
-    "shift"
+    "shift",
+    "google-sheets",
+    "cloud-sync"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/DK0124/schedule-system.git"
+  },
+  "features": {
+    "google-sheets": true,
+    "offline-support": true,
+    "auto-sync": true,
+    "oauth": true,
+    "responsive": true
   }
 }

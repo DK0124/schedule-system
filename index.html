@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Bleu 排班系統 - Bleu">
-    <meta name="author" content="Bleu">
-    <title>排班系統 - 管理介面</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📅</text></svg>">
+    <meta name="description" content="Bleu 班表管理系統 - DK0124">
+    <meta name="author" content="DK0124">
+    <title>排班管理系統 - 管理介面</title>
+    
+    <!-- Google Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23003D52' d='M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z'/></svg>">
     
     <style>
-        /* Bleu 品牌色系 */
+        /* DK0124 品牌色系 */
         :root {
             --dk-primary: #003D52;
             --dk-secondary: #83968B;
@@ -38,6 +44,20 @@
             color: var(--dk-text);
             line-height: 1.6;
             min-height: 100vh;
+        }
+
+        /* Material Icons 樣式調整 */
+        .material-icons,
+        .material-icons-outlined {
+            vertical-align: middle;
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .btn .material-icons,
+        .btn .material-icons-outlined {
+            font-size: 18px;
+            margin-right: 6px;
         }
 
         .app {
@@ -72,6 +92,11 @@
             gap: 12px;
         }
 
+        .header h1 .material-icons {
+            font-size: 32px;
+            margin-right: 12px;
+        }
+
         .brand-badge {
             background: var(--dk-light);
             color: var(--dk-primary);
@@ -79,6 +104,7 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         /* Google Sheets 狀態 */
@@ -120,7 +146,7 @@
             transition: var(--dk-transition);
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             white-space: nowrap;
         }
 
@@ -181,6 +207,17 @@
             color: white;
         }
 
+        .btn-icon {
+            padding: 8px;
+            border-radius: 50%;
+            min-width: auto;
+        }
+
+        .btn-icon .material-icons {
+            margin: 0;
+            font-size: 20px;
+        }
+
         /* Google Sheets 控制面板 */
         .sheets-panel {
             background: var(--dk-white);
@@ -197,6 +234,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .sheets-icon {
+            width: 24px;
+            height: 24px;
         }
 
         .sync-actions {
@@ -233,6 +275,12 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid var(--dk-light);
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-card h2 .material-icons {
+            margin-right: 10px;
         }
 
         /* 時段管理 */
@@ -258,6 +306,22 @@
         .shift-item:hover {
             background: var(--dk-light);
             transform: translateX(4px);
+        }
+
+        .shift-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shift-icon {
+            color: var(--dk-accent);
+            font-size: 20px;
+        }
+
+        .shift-details {
+            display: flex;
+            flex-direction: column;
         }
 
         .shift-name {
@@ -306,6 +370,11 @@
             font-size: 16px;
         }
 
+        .employee-avatar .material-icons {
+            margin: 0;
+            font-size: 24px;
+        }
+
         .employee-info {
             flex: 1;
             margin-left: 12px;
@@ -320,6 +389,14 @@
         .employee-meta {
             font-size: 13px;
             color: var(--dk-gray-dark);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .employee-meta .material-icons {
+            font-size: 14px;
+            margin-right: 2px;
         }
 
         .employee-badge {
@@ -426,6 +503,11 @@
             align-items: center;
         }
 
+        .schedule-chip .material-icons {
+            font-size: 12px;
+            margin: 0 2px 0 0;
+        }
+
         .schedule-count {
             background: rgba(255, 255, 255, 0.3);
             padding: 1px 5px;
@@ -476,6 +558,12 @@
         .modal-header h3 {
             color: var(--dk-primary);
             font-size: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-header h3 .material-icons {
+            margin-right: 10px;
         }
 
         .modal-body {
@@ -502,6 +590,14 @@
             font-weight: 600;
             color: var(--dk-primary);
             font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-label .material-icons {
+            font-size: 18px;
+            margin-right: 6px;
+            color: var(--dk-secondary);
         }
 
         .form-control {
@@ -531,6 +627,12 @@
         .time-separator {
             color: var(--dk-secondary);
             font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .time-separator .material-icons {
+            margin: 0;
         }
 
         /* 員工選擇清單 */
@@ -582,6 +684,18 @@
             border: 2px solid var(--dk-light);
         }
 
+        .scheduled-list h4 {
+            margin-bottom: 10px;
+            color: var(--dk-primary);
+            display: flex;
+            align-items: center;
+        }
+
+        .scheduled-list h4 .material-icons {
+            margin-right: 8px;
+            font-size: 20px;
+        }
+
         .scheduled-item {
             display: flex;
             justify-content: space-between;
@@ -599,6 +713,16 @@
 
         .scheduled-info {
             display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .scheduled-info .material-icons {
+            color: var(--dk-accent);
+        }
+
+        .scheduled-details {
+            display: flex;
             flex-direction: column;
         }
 
@@ -611,7 +735,13 @@
         .scheduled-time {
             font-size: 12px;
             color: var(--dk-secondary);
-            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .scheduled-time .material-icons {
+            font-size: 14px;
         }
 
         /* 快速設定 */
@@ -633,6 +763,15 @@
             font-weight: 600;
             transition: var(--dk-transition);
             color: var(--dk-gray-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .preset-shift .material-icons {
+            font-size: 16px;
+            margin: 0;
         }
 
         .preset-shift:hover {
@@ -677,6 +816,13 @@
             z-index: 2000;
             box-shadow: 0 4px 20px rgba(0, 61, 82, 0.3);
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast .material-icons {
+            margin: 0;
         }
 
         .toast.show {
@@ -733,6 +879,11 @@
                 font-size: 9px;
                 padding: 2px 4px;
             }
+
+            .material-icons,
+            .material-icons-outlined {
+                font-size: 18px;
+            }
         }
 
         /* 列印樣式 */
@@ -761,8 +912,9 @@
         <header class="header">
             <div class="header-top">
                 <h1>
-                    📅 智能排班管理系統
-                    <span class="brand-badge">Bleu</span>
+                    <span class="material-icons">calendar_month</span>
+                    Bleu 班表管理系統
+                    <span class="brand-badge">DK0124</span>
                 </h1>
                 <div class="sheets-status">
                     <span class="status-dot" id="syncStatus"></span>
@@ -774,7 +926,7 @@
         <!-- Google Sheets 控制面板 -->
         <div class="sheets-panel">
             <h3>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <svg class="sheets-icon" viewBox="0 0 24 24" fill="none">
                     <path d="M19 11V9L12 2L5 9V11H7V19H17V11H19Z" fill="#34A853"/>
                     <path d="M7 11H17V19H7V11Z" fill="#4285F4"/>
                 </svg>
@@ -782,20 +934,25 @@
             </h3>
             <div class="sync-actions">
                 <button class="btn btn-accent" onclick="App.syncToSheets()" id="uploadBtn">
-                    ⬆️ 上傳到雲端
+                    <span class="material-icons-outlined">cloud_upload</span>
+                    上傳到雲端
                 </button>
                 <button class="btn btn-primary" onclick="App.loadFromSheets()" id="downloadBtn">
-                    ⬇️ 從雲端載入
+                    <span class="material-icons-outlined">cloud_download</span>
+                    從雲端載入
                 </button>
                 <button class="btn btn-secondary" onclick="App.toggleAutoSync()" id="autoSyncBtn">
-                    🔄 自動同步：關
+                    <span class="material-icons-outlined">sync</span>
+                    自動同步：關
                 </button>
                 <button class="btn btn-light" onclick="window.open('employee-view.html', '_blank')">
-                    👥 員工檢視
+                    <span class="material-icons-outlined">groups</span>
+                    員工檢視
                 </button>
             </div>
-            <div style="margin-top: 10px; font-size: 13px; color: var(--dk-gray-dark);">
-                最後同步：<span id="lastSync">尚未同步</span>
+            <div style="margin-top: 10px; font-size: 13px; color: var(--dk-gray-dark); display: flex; align-items: center;">
+                <span class="material-icons-outlined" style="font-size: 16px; margin-right: 5px;">schedule</span>
+                最後同步：<span id="lastSync" style="margin-left: 5px;">尚未同步</span>
             </div>
         </div>
 
@@ -805,18 +962,26 @@
             <aside class="sidebar">
                 <!-- 時段管理 -->
                 <div class="sidebar-card">
-                    <h2>⏰ 班次時段管理</h2>
+                    <h2>
+                        <span class="material-icons-outlined">schedule</span>
+                        班次時段管理
+                    </h2>
                     <div class="shift-list" id="shiftList"></div>
                     <button class="btn btn-primary" style="width: 100%;" onclick="App.openShiftModal()">
-                        + 新增自訂時段
+                        <span class="material-icons">add</span>
+                        新增自訂時段
                     </button>
                 </div>
 
                 <!-- 員工管理 -->
                 <div class="sidebar-card">
-                    <h2>👥 員工管理</h2>
+                    <h2>
+                        <span class="material-icons-outlined">badge</span>
+                        員工管理
+                    </h2>
                     <button class="btn btn-accent" style="width: 100%; margin-bottom: 15px;" onclick="App.openEmployeeModal()">
-                        + 新增員工
+                        <span class="material-icons">person_add</span>
+                        新增員工
                     </button>
                     <div class="employee-list" id="employeeList"></div>
                 </div>
@@ -826,16 +991,22 @@
             <section class="calendar">
                 <div class="calendar-header">
                     <div class="calendar-nav">
-                        <button class="btn btn-outline" onclick="App.previousMonth()">◀</button>
+                        <button class="btn btn-icon btn-outline" onclick="App.previousMonth()">
+                            <span class="material-icons">chevron_left</span>
+                        </button>
                         <h2 class="calendar-title" id="currentMonth"></h2>
-                        <button class="btn btn-outline" onclick="App.nextMonth()">▶</button>
+                        <button class="btn btn-icon btn-outline" onclick="App.nextMonth()">
+                            <span class="material-icons">chevron_right</span>
+                        </button>
                     </div>
                     <div>
                         <button class="btn btn-light" onclick="App.exportCSV()">
-                            📊 匯出 CSV
+                            <span class="material-icons-outlined">download</span>
+                            匯出 CSV
                         </button>
                         <button class="btn btn-light" onclick="window.print()">
-                            🖨️ 列印
+                            <span class="material-icons-outlined">print</span>
+                            列印
                         </button>
                     </div>
                 </div>
@@ -848,36 +1019,59 @@
     <div class="modal" id="employeeModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>員工資料</h3>
-                <button class="btn btn-light" onclick="App.closeModal('employeeModal')">✕</button>
+                <h3>
+                    <span class="material-icons-outlined">person</span>
+                    員工資料
+                </h3>
+                <button class="btn btn-icon btn-light" onclick="App.closeModal('employeeModal')">
+                    <span class="material-icons">close</span>
+                </button>
             </div>
             <div class="modal-body">
                 <form id="employeeForm">
                     <div class="form-group">
-                        <label class="form-label">姓名 *</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">badge</span>
+                            姓名 *
+                        </label>
                         <input type="text" class="form-control" id="employeeName" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">類型</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">work</span>
+                            類型
+                        </label>
                         <select class="form-control" id="employeeType">
                             <option value="fulltime">正職</option>
                             <option value="parttime">兼職 (PT)</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">電話</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">phone</span>
+                            電話
+                        </label>
                         <input type="tel" class="form-control" id="employeePhone">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Email</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">email</span>
+                            Email
+                        </label>
                         <input type="email" class="form-control" id="employeeEmail">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-light" onclick="App.closeModal('employeeModal')">取消</button>
-                <button class="btn btn-accent" onclick="App.deleteEmployee()" id="deleteEmployeeBtn" style="display: none;">刪除</button>
-                <button class="btn btn-primary" onclick="App.saveEmployee()">儲存</button>
+                <button class="btn btn-accent" onclick="App.deleteEmployee()" id="deleteEmployeeBtn" style="display: none;">
+                    <span class="material-icons-outlined">delete</span>
+                    刪除
+                </button>
+                <button class="btn btn-primary" onclick="App.saveEmployee()">
+                    <span class="material-icons-outlined">save</span>
+                    儲存
+                </button>
             </div>
         </div>
     </div>
@@ -886,50 +1080,78 @@
     <div class="modal" id="scheduleModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="scheduleTitle">排班設定</h3>
-                <button class="btn btn-light" onclick="App.closeModal('scheduleModal')">✕</button>
+                <h3 id="scheduleTitle">
+                    <span class="material-icons-outlined">event</span>
+                    排班設定
+                </h3>
+                <button class="btn btn-icon btn-light" onclick="App.closeModal('scheduleModal')">
+                    <span class="material-icons">close</span>
+                </button>
             </div>
             <div class="modal-body">
                 <form id="scheduleForm">
                     <!-- 快速選擇 -->
                     <div class="form-group">
-                        <label class="form-label">快速選擇班次</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">speed</span>
+                            快速選擇班次
+                        </label>
                         <div class="quick-settings" id="quickShifts"></div>
                     </div>
 
                     <!-- 自訂時間 -->
                     <div class="form-group">
-                        <label class="form-label">自訂時間</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">access_time</span>
+                            自訂時間
+                        </label>
                         <div class="time-group">
                             <input type="time" class="form-control" id="startTime">
-                            <span class="time-separator">至</span>
+                            <span class="time-separator">
+                                <span class="material-icons">arrow_forward</span>
+                            </span>
                             <input type="time" class="form-control" id="endTime">
                         </div>
                     </div>
 
                     <!-- 員工多選 -->
                     <div class="form-group">
-                        <label class="form-label">選擇員工（可多選）</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">groups</span>
+                            選擇員工（可多選）
+                        </label>
                         <div class="employee-select-list" id="employeeSelectList"></div>
                     </div>
 
                     <!-- 備註 -->
                     <div class="form-group">
-                        <label class="form-label">備註</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">note</span>
+                            備註
+                        </label>
                         <textarea class="form-control" id="scheduleNotes" rows="2" placeholder="輸入備註..."></textarea>
                     </div>
 
                     <!-- 已排班列表 -->
                     <div class="scheduled-list">
-                        <h4 style="margin-bottom: 10px; color: var(--dk-primary);">當日已排班</h4>
+                        <h4>
+                            <span class="material-icons-outlined">list_alt</span>
+                            當日已排班
+                        </h4>
                         <div id="currentSchedules"></div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-accent" onclick="App.clearDaySchedule()">清空當日</button>
+                <button class="btn btn-accent" onclick="App.clearDaySchedule()">
+                    <span class="material-icons-outlined">clear_all</span>
+                    清空當日
+                </button>
                 <button class="btn btn-light" onclick="App.closeModal('scheduleModal')">取消</button>
-                <button class="btn btn-primary" onclick="App.saveSchedule()">儲存排班</button>
+                <button class="btn btn-primary" onclick="App.saveSchedule()">
+                    <span class="material-icons-outlined">check</span>
+                    儲存排班
+                </button>
             </div>
         </div>
     </div>
@@ -938,20 +1160,33 @@
     <div class="modal" id="shiftModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>新增自訂時段</h3>
-                <button class="btn btn-light" onclick="App.closeModal('shiftModal')">✕</button>
+                <h3>
+                    <span class="material-icons-outlined">schedule</span>
+                    新增自訂時段
+                </h3>
+                <button class="btn btn-icon btn-light" onclick="App.closeModal('shiftModal')">
+                    <span class="material-icons">close</span>
+                </button>
             </div>
             <div class="modal-body">
                 <form id="shiftForm">
                     <div class="form-group">
-                        <label class="form-label">時段名稱 *</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">label</span>
+                            時段名稱 *
+                        </label>
                         <input type="text" class="form-control" id="shiftName" placeholder="例如：大夜班">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">時間範圍</label>
+                        <label class="form-label">
+                            <span class="material-icons-outlined">schedule</span>
+                            時間範圍
+                        </label>
                         <div class="time-group">
                             <input type="time" class="form-control" id="shiftStartTime">
-                            <span class="time-separator">至</span>
+                            <span class="time-separator">
+                                <span class="material-icons">arrow_forward</span>
+                            </span>
                             <input type="time" class="form-control" id="shiftEndTime">
                         </div>
                     </div>
@@ -959,7 +1194,10 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-light" onclick="App.closeModal('shiftModal')">取消</button>
-                <button class="btn btn-primary" onclick="App.saveShift()">儲存時段</button>
+                <button class="btn btn-primary" onclick="App.saveShift()">
+                    <span class="material-icons-outlined">save</span>
+                    儲存時段
+                </button>
             </div>
         </div>
     </div>
@@ -968,8 +1206,9 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        // 應用程式主物件
+        // 應用程式主物件（保留原有的 JavaScript 邏輯）
         const App = {
+            // ... 原有的 JavaScript 程式碼保持不變 ...
             // 資料
             employees: [],
             schedules: {},
@@ -978,12 +1217,13 @@
             currentDate: null,
             editingEmployee: null,
             
-            // Google Sheets 設定 (您提供的網址)
+            // Google Sheets 設定
             scriptUrl: 'https://script.google.com/macros/s/AKfycbyYCnrYAiYylH57XAwFPeDwi6pQa1FEEBAVUlFly-vgvfgit3sX9l9QAwvaetuWO92d3A/exec',
             isConnected: false,
             autoSyncEnabled: false,
             autoSyncInterval: null,
             
+            // ... 保留所有原有的 JavaScript methods ...
             // 初始化
             async init() {
                 this.loadData();
@@ -994,7 +1234,6 @@
                 await this.testConnection();
                 this.loadLastSync();
                 
-                // 監聽 localStorage 變化
                 window.addEventListener('storage', (e) => {
                     if (e.key === 'scheduleData') {
                         this.loadData();
@@ -1003,7 +1242,6 @@
                     }
                 });
 
-                // ESC 關閉模態框
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {
                         document.querySelectorAll('.modal.show').forEach(modal => {
@@ -1012,8 +1250,8 @@
                     }
                 });
             },
-            
-            // 測試 Google Sheets 連線
+
+            // 測試連線
             async testConnection() {
                 try {
                     const response = await fetch(this.scriptUrl + '?test=true');
@@ -1028,7 +1266,7 @@
                     this.updateConnectionStatus(false);
                 }
             },
-            
+
             // 更新連線狀態
             updateConnectionStatus(connected) {
                 const statusDot = document.getElementById('syncStatus');
@@ -1042,11 +1280,164 @@
                     statusText.textContent = '離線';
                 }
             },
+
+            // 渲染班次（更新為使用 Material Icons）
+            renderShifts() {
+                const shiftList = document.getElementById('shiftList');
+                shiftList.innerHTML = '';
+                
+                this.shifts.forEach(shift => {
+                    const div = document.createElement('div');
+                    div.className = 'shift-item';
+                    
+                    // 根據時間選擇不同的圖標
+                    let icon = 'schedule';
+                    const startHour = parseInt(shift.startTime.split(':')[0]);
+                    if (startHour >= 5 && startHour < 12) {
+                        icon = 'wb_sunny'; // 早班
+                    } else if (startHour >= 12 && startHour < 18) {
+                        icon = 'wb_twilight'; // 午班
+                    } else {
+                        icon = 'nightlight'; // 晚班
+                    }
+                    
+                    div.innerHTML = `
+                        <div class="shift-info">
+                            <span class="material-icons-outlined shift-icon">${icon}</span>
+                            <div class="shift-details">
+                                <div class="shift-name">${shift.name}</div>
+                                <div class="shift-time">${shift.startTime} - ${shift.endTime}</div>
+                            </div>
+                        </div>
+                        ${shift.id > 3 ? `
+                            <button class="btn btn-icon btn-accent" style="padding: 4px;" onclick="App.deleteShift(${shift.id})">
+                                <span class="material-icons" style="font-size: 16px;">delete</span>
+                            </button>
+                        ` : ''}
+                    `;
+                    shiftList.appendChild(div);
+                });
+            },
+
+            // 渲染員工列表（更新為使用 Material Icons）
+            renderEmployees() {
+                const list = document.getElementById('employeeList');
+                list.innerHTML = '';
+                
+                if (this.employees.length === 0) {
+                    list.innerHTML = `
+                        <div style="text-align: center; color: var(--dk-gray-dark); padding: 20px;">
+                            <span class="material-icons-outlined" style="font-size: 48px; opacity: 0.3;">person_off</span>
+                            <p style="margin-top: 10px;">尚無員工資料</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                this.employees.forEach(employee => {
+                    const div = document.createElement('div');
+                    div.className = 'employee-item';
+                    
+                    div.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <div class="employee-avatar">
+                                <span class="material-icons">person</span>
+                            </div>
+                            <div class="employee-info">
+                                <div class="employee-name">${employee.name}</div>
+                                <div class="employee-meta">
+                                    ${employee.phone ? `
+                                        <span class="material-icons">phone</span>
+                                        ${employee.phone}
+                                    ` : '無電話'}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="employee-badge ${employee.type === 'parttime' ? 'parttime' : ''}">
+                            ${employee.type === 'fulltime' ? '正職' : 'PT'}
+                        </span>
+                    `;
+                    
+                    div.onclick = () => this.editEmployee(employee);
+                    list.appendChild(div);
+                });
+            },
+
+            // 載入當日已排班（更新為使用 Material Icons）
+            loadCurrentSchedules() {
+                const currentSchedules = document.getElementById('currentSchedules');
+                currentSchedules.innerHTML = '';
+                
+                const schedules = this.schedules[this.currentDate] || [];
+                
+                if (schedules.length === 0) {
+                    currentSchedules.innerHTML = `
+                        <div style="text-align: center; color: var(--dk-gray-dark); padding: 20px;">
+                            <span class="material-icons-outlined" style="font-size: 32px; opacity: 0.3;">event_available</span>
+                            <p style="margin-top: 10px;">尚無排班</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                schedules.forEach((schedule, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'scheduled-item';
+                    div.innerHTML = `
+                        <div class="scheduled-info">
+                            <span class="material-icons-outlined">person</span>
+                            <div class="scheduled-details">
+                                <span class="scheduled-name">${this.getEmployeeName(schedule.employeeId)}</span>
+                                <span class="scheduled-time">
+                                    <span class="material-icons">schedule</span>
+                                    ${schedule.startTime} - ${schedule.endTime}
+                                </span>
+                            </div>
+                        </div>
+                        <button class="btn btn-icon btn-accent" style="padding: 4px;" onclick="App.removeSchedule(${index})">
+                            <span class="material-icons" style="font-size: 16px;">remove</span>
+                        </button>
+                    `;
+                    currentSchedules.appendChild(div);
+                });
+            },
+
+            // 顯示通知（更新為使用 Material Icons）
+            showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                
+                let icon = 'info';
+                if (type === 'success') icon = 'check_circle';
+                if (type === 'error') icon = 'error';
+                if (type === 'warning') icon = 'warning';
+                
+                toast.innerHTML = `
+                    <span class="material-icons">${icon}</span>
+                    ${message}
+                `;
+                
+                toast.className = 'toast show';
+                
+                if (type === 'error') {
+                    toast.classList.add('error');
+                } else if (type === 'success') {
+                    toast.classList.add('success');
+                } else if (type === 'warning') {
+                    toast.classList.add('warning');
+                }
+                
+                clearTimeout(this.toastTimeout);
+                this.toastTimeout = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            },
+
+            // ... 保留其他所有原有的方法 ...
             
             // 同步到 Google Sheets
             async syncToSheets() {
                 const uploadBtn = document.getElementById('uploadBtn');
-                const originalText = uploadBtn.innerHTML;
+                const originalHTML = uploadBtn.innerHTML;
                 uploadBtn.innerHTML = '<span class="loading"></span> 上傳中...';
                 uploadBtn.disabled = true;
                 
@@ -1064,7 +1455,6 @@
                         })
                     });
                     
-                    // 更新最後同步時間
                     const now = new Date();
                     localStorage.setItem('lastSync', now.toISOString());
                     this.updateLastSync(now);
@@ -1072,21 +1462,20 @@
                     this.showToast('資料已成功上傳到 Google Sheets！', 'success');
                     
                 } catch (error) {
-                    // CORS 錯誤但資料可能已成功上傳
                     const now = new Date();
                     localStorage.setItem('lastSync', now.toISOString());
                     this.updateLastSync(now);
                     this.showToast('資料已發送到雲端', 'success');
                 } finally {
-                    uploadBtn.innerHTML = originalText;
+                    uploadBtn.innerHTML = originalHTML;
                     uploadBtn.disabled = false;
                 }
             },
-            
+
             // 從 Google Sheets 載入
             async loadFromSheets() {
                 const downloadBtn = document.getElementById('downloadBtn');
-                const originalText = downloadBtn.innerHTML;
+                const originalHTML = downloadBtn.innerHTML;
                 downloadBtn.innerHTML = '<span class="loading"></span> 載入中...';
                 downloadBtn.disabled = true;
                 
@@ -1109,21 +1498,102 @@
                     console.error('載入失敗:', error);
                     this.showToast('載入失敗，請確認試算表內容', 'error');
                 } finally {
-                    downloadBtn.innerHTML = originalText;
+                    downloadBtn.innerHTML = originalHTML;
                     downloadBtn.disabled = false;
                 }
             },
-            
-            // 準備試算表資料
+
+            // 切換自動同步
+            toggleAutoSync() {
+                this.autoSyncEnabled = !this.autoSyncEnabled;
+                const btn = document.getElementById('autoSyncBtn');
+                
+                if (this.autoSyncEnabled) {
+                    this.autoSyncInterval = setInterval(() => {
+                        this.syncToSheets();
+                    }, 5 * 60 * 1000);
+                    
+                    btn.innerHTML = '<span class="material-icons-outlined">sync_disabled</span>自動同步：開';
+                    btn.classList.remove('btn-secondary');
+                    btn.classList.add('btn-accent');
+                    this.showToast('已啟用自動同步（每5分鐘）', 'success');
+                } else {
+                    if (this.autoSyncInterval) {
+                        clearInterval(this.autoSyncInterval);
+                        this.autoSyncInterval = null;
+                    }
+                    
+                    btn.innerHTML = '<span class="material-icons-outlined">sync</span>自動同步：關';
+                    btn.classList.remove('btn-accent');
+                    btn.classList.add('btn-secondary');
+                    this.showToast('已停用自動同步', 'info');
+                }
+                
+                localStorage.setItem('autoSync', this.autoSyncEnabled);
+            },
+
+            // 其他所有方法保持不變...
+            initDefaultShifts() {
+                if (this.shifts.length === 0) {
+                    this.shifts = [
+                        { id: 1, name: '早班', startTime: '06:00', endTime: '14:00' },
+                        { id: 2, name: '午班', startTime: '14:00', endTime: '22:00' },
+                        { id: 3, name: '晚班', startTime: '22:00', endTime: '06:00' }
+                    ];
+                    this.saveData();
+                }
+            },
+
+            loadData() {
+                const saved = localStorage.getItem('scheduleData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    this.employees = data.employees || [];
+                    this.schedules = data.schedules || {};
+                    this.shifts = data.shifts || [];
+                } else {
+                    this.employees = [
+                        { id: 1, name: '王小明', type: 'fulltime', phone: '0912345678', email: 'ming@example.com' },
+                        { id: 2, name: '李小華', type: 'fulltime', phone: '0923456789', email: 'hua@example.com' },
+                        { id: 3, name: '張大偉', type: 'parttime', phone: '0934567890', email: 'wei@example.com' }
+                    ];
+                    this.saveData();
+                }
+            },
+
+            saveData() {
+                const data = {
+                    employees: this.employees,
+                    schedules: this.schedules,
+                    shifts: this.shifts,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('scheduleData', JSON.stringify(data));
+            },
+
+            loadLastSync() {
+                const lastSync = localStorage.getItem('lastSync');
+                if (lastSync) {
+                    this.updateLastSync(new Date(lastSync));
+                }
+                
+                const autoSync = localStorage.getItem('autoSync') === 'true';
+                if (autoSync) {
+                    this.toggleAutoSync();
+                }
+            },
+
+            updateLastSync(date) {
+                document.getElementById('lastSync').textContent = date.toLocaleString('zh-TW');
+            },
+
             prepareSheetData() {
                 const data = [];
                 
-                // 標題
-                data.push(['Bleu 排班系統資料']);
+                data.push(['DK0124 排班系統資料']);
                 data.push(['匯出時間', new Date().toLocaleString('zh-TW')]);
                 data.push([]);
                 
-                // 員工資料
                 data.push(['=== 員工資料 ===']);
                 data.push(['ID', '姓名', '類型', '電話', 'Email']);
                 this.employees.forEach(emp => {
@@ -1138,7 +1608,6 @@
                 
                 data.push([]);
                 
-                // 班次設定
                 data.push(['=== 班次設定 ===']);
                 data.push(['ID', '名稱', '開始時間', '結束時間']);
                 this.shifts.forEach(shift => {
@@ -1152,7 +1621,6 @@
                 
                 data.push([]);
                 
-                // 排班資料
                 data.push(['=== 排班資料 ===']);
                 data.push(['日期', '員工ID', '員工姓名', '開始時間', '結束時間', '備註']);
                 
@@ -1173,8 +1641,7 @@
                 
                 return data;
             },
-            
-            // 解析試算表資料
+
             parseSheetData(data) {
                 this.employees = [];
                 this.shifts = [];
@@ -1187,15 +1654,15 @@
                     
                     if (row[0] === '=== 員工資料 ===') {
                         section = 'employees';
-                        i++; // 跳過標題行
+                        i++;
                         continue;
                     } else if (row[0] === '=== 班次設定 ===') {
                         section = 'shifts';
-                        i++; // 跳過標題行
+                        i++;
                         continue;
                     } else if (row[0] === '=== 排班資料 ===') {
                         section = 'schedules';
-                        i++; // 跳過標題行
+                        i++;
                         continue;
                     }
                     
@@ -1229,127 +1696,16 @@
                     }
                 }
                 
-                // 如果沒有班次資料，初始化預設班次
                 if (this.shifts.length === 0) {
                     this.initDefaultShifts();
                 }
             },
-            
-            // 切換自動同步
-            toggleAutoSync() {
-                this.autoSyncEnabled = !this.autoSyncEnabled;
-                const btn = document.getElementById('autoSyncBtn');
-                
-                if (this.autoSyncEnabled) {
-                    this.autoSyncInterval = setInterval(() => {
-                        this.syncToSheets();
-                    }, 5 * 60 * 1000); // 每5分鐘
-                    
-                    btn.innerHTML = '⏸️ 自動同步：開';
-                    btn.classList.remove('btn-secondary');
-                    btn.classList.add('btn-accent');
-                    this.showToast('已啟用自動同步（每5分鐘）', 'success');
-                } else {
-                    if (this.autoSyncInterval) {
-                        clearInterval(this.autoSyncInterval);
-                        this.autoSyncInterval = null;
-                    }
-                    
-                    btn.innerHTML = '🔄 自動同步：關';
-                    btn.classList.remove('btn-accent');
-                    btn.classList.add('btn-secondary');
-                    this.showToast('已停用自動同步', 'info');
-                }
-                
-                localStorage.setItem('autoSync', this.autoSyncEnabled);
-            },
-            
-            // 載入最後同步時間
-            loadLastSync() {
-                const lastSync = localStorage.getItem('lastSync');
-                if (lastSync) {
-                    this.updateLastSync(new Date(lastSync));
-                }
-                
-                // 載入自動同步設定
-                const autoSync = localStorage.getItem('autoSync') === 'true';
-                if (autoSync) {
-                    this.toggleAutoSync();
-                }
-            },
-            
-            // 更新最後同步時間顯示
-            updateLastSync(date) {
-                document.getElementById('lastSync').textContent = date.toLocaleString('zh-TW');
-            },
-            
-            // 初始化預設班次
-            initDefaultShifts() {
-                if (this.shifts.length === 0) {
-                    this.shifts = [
-                        { id: 1, name: '早班', startTime: '06:00', endTime: '14:00' },
-                        { id: 2, name: '午班', startTime: '14:00', endTime: '22:00' },
-                        { id: 3, name: '晚班', startTime: '22:00', endTime: '06:00' }
-                    ];
-                    this.saveData();
-                }
-            },
-            
-            // 載入資料
-            loadData() {
-                const saved = localStorage.getItem('scheduleData');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    this.employees = data.employees || [];
-                    this.schedules = data.schedules || {};
-                    this.shifts = data.shifts || [];
-                } else {
-                    // 預設資料
-                    this.employees = [
-                        { id: 1, name: '王小明', type: 'fulltime', phone: '0912345678', email: 'ming@example.com' },
-                        { id: 2, name: '李小華', type: 'fulltime', phone: '0923456789', email: 'hua@example.com' },
-                        { id: 3, name: '張大偉', type: 'parttime', phone: '0934567890', email: 'wei@example.com' }
-                    ];
-                    this.saveData();
-                }
-            },
-            
-            // 儲存資料
-            saveData() {
-                const data = {
-                    employees: this.employees,
-                    schedules: this.schedules,
-                    shifts: this.shifts,
-                    lastUpdated: new Date().toISOString()
-                };
-                localStorage.setItem('scheduleData', JSON.stringify(data));
-            },
-            
-            // 渲染班次列表
-            renderShifts() {
-                const shiftList = document.getElementById('shiftList');
-                shiftList.innerHTML = '';
-                
-                this.shifts.forEach(shift => {
-                    const div = document.createElement('div');
-                    div.className = 'shift-item';
-                    div.innerHTML = `
-                        <div>
-                            <div class="shift-name">${shift.name}</div>
-                            <div class="shift-time">${shift.startTime} - ${shift.endTime}</div>
-                        </div>
-                        ${shift.id > 3 ? `<button class="btn btn-accent" style="padding: 4px 8px; font-size: 12px;" onclick="App.deleteShift(${shift.id})">刪除</button>` : ''}
-                    `;
-                    shiftList.appendChild(div);
-                });
-            },
-            
-            // 其他功能方法保持不變...
+
             openShiftModal() {
                 document.getElementById('shiftForm').reset();
                 document.getElementById('shiftModal').classList.add('show');
             },
-            
+
             saveShift() {
                 const name = document.getElementById('shiftName').value.trim();
                 const startTime = document.getElementById('shiftStartTime').value;
@@ -1373,7 +1729,7 @@
                 this.closeModal('shiftModal');
                 this.showToast('時段已新增', 'success');
             },
-            
+
             deleteShift(id) {
                 if (confirm('確定要刪除這個時段嗎？')) {
                     this.shifts = this.shifts.filter(s => s.id !== id);
@@ -1382,8 +1738,7 @@
                     this.showToast('時段已刪除', 'success');
                 }
             },
-            
-            // 渲染日曆
+
             renderCalendar() {
                 const year = this.currentMonth.getFullYear();
                 const month = this.currentMonth.getMonth();
@@ -1438,7 +1793,10 @@
                             const chip = document.createElement('div');
                             chip.className = 'schedule-chip';
                             chip.innerHTML = `
-                                <span>${time.split('-')[0]}</span>
+                                <span style="display: flex; align-items: center;">
+                                    <span class="material-icons" style="font-size: 12px; margin-right: 2px;">schedule</span>
+                                    ${time.split('-')[0]}
+                                </span>
                                 <span class="schedule-count">${schedules.length}</span>
                             `;
                             chip.title = schedules.map(s => 
@@ -1461,7 +1819,7 @@
                     calendar.appendChild(div);
                 }
             },
-            
+
             createDateElement(date, isOtherMonth, isToday) {
                 const div = document.createElement('div');
                 div.className = 'calendar-date';
@@ -1479,21 +1837,38 @@
                 
                 return div;
             },
-            
+
             openScheduleModal(date) {
                 const year = this.currentMonth.getFullYear();
                 const month = this.currentMonth.getMonth();
                 this.currentDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
                 
-                document.getElementById('scheduleTitle').textContent = 
-                    `${year}年${month + 1}月${date}日 排班設定`;
+                document.getElementById('scheduleTitle').innerHTML = `
+                    <span class="material-icons-outlined">event</span>
+                    ${year}年${month + 1}月${date}日 排班設定
+                `;
                 
                 const quickShifts = document.getElementById('quickShifts');
                 quickShifts.innerHTML = '';
                 this.shifts.forEach(shift => {
                     const btn = document.createElement('div');
                     btn.className = 'preset-shift';
-                    btn.textContent = shift.name;
+                    
+                    // 選擇圖標
+                    let icon = 'schedule';
+                    const startHour = parseInt(shift.startTime.split(':')[0]);
+                    if (startHour >= 5 && startHour < 12) {
+                        icon = 'wb_sunny';
+                    } else if (startHour >= 12 && startHour < 18) {
+                        icon = 'wb_twilight';
+                    } else {
+                        icon = 'nightlight';
+                    }
+                    
+                    btn.innerHTML = `
+                        <span class="material-icons">${icon}</span>
+                        ${shift.name}
+                    `;
                     btn.onclick = () => {
                         document.querySelectorAll('.preset-shift').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
@@ -1529,32 +1904,7 @@
                 
                 document.getElementById('scheduleModal').classList.add('show');
             },
-            
-            loadCurrentSchedules() {
-                const currentSchedules = document.getElementById('currentSchedules');
-                currentSchedules.innerHTML = '';
-                
-                const schedules = this.schedules[this.currentDate] || [];
-                
-                if (schedules.length === 0) {
-                    currentSchedules.innerHTML = '<div style="text-align: center; color: var(--dk-gray-dark);">尚無排班</div>';
-                    return;
-                }
-                
-                schedules.forEach((schedule, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'scheduled-item';
-                    div.innerHTML = `
-                        <div class="scheduled-info">
-                            <span class="scheduled-name">${this.getEmployeeName(schedule.employeeId)}</span>
-                            <span class="scheduled-time">${schedule.startTime} - ${schedule.endTime}</span>
-                        </div>
-                        <button class="btn btn-accent" style="padding: 4px 8px; font-size: 12px;" onclick="App.removeSchedule(${index})">移除</button>
-                    `;
-                    currentSchedules.appendChild(div);
-                });
-            },
-            
+
             removeSchedule(index) {
                 if (this.schedules[this.currentDate]) {
                     this.schedules[this.currentDate].splice(index, 1);
@@ -1567,7 +1917,7 @@
                     this.showToast('已移除排班', 'success');
                 }
             },
-            
+
             clearDaySchedule() {
                 if (confirm('確定要清空當日所有排班嗎？')) {
                     delete this.schedules[this.currentDate];
@@ -1577,7 +1927,7 @@
                     this.showToast('已清空當日排班', 'success');
                 }
             },
-            
+
             saveSchedule() {
                 const startTime = document.getElementById('startTime').value;
                 const endTime = document.getElementById('endTime').value;
@@ -1627,62 +1977,31 @@
                     checkbox.checked = false;
                 });
             },
-            
+
             isTimeOverlap(start1, end1, start2, end2) {
                 const s1 = this.timeToMinutes(start1);
                 const e1 = this.timeToMinutes(end1);
                 const s2 = this.timeToMinutes(start2);
                 const e2 = this.timeToMinutes(end2);
                 
-                if (e1 < s1) e1 += 1440;
-                if (e2 < s2) e2 += 1440;
+                let e1Adjusted = e1 < s1 ? e1 + 1440 : e1;
+                let e2Adjusted = e2 < s2 ? e2 + 1440 : e2;
                 
-                return (s1 < e2 && s2 < e1);
+                return (s1 < e2Adjusted && s2 < e1Adjusted);
             },
-            
+
             timeToMinutes(time) {
                 const [hours, minutes] = time.split(':').map(Number);
                 return hours * 60 + minutes;
             },
-            
-            renderEmployees() {
-                const list = document.getElementById('employeeList');
-                list.innerHTML = '';
-                
-                if (this.employees.length === 0) {
-                    list.innerHTML = '<div style="text-align: center; color: var(--dk-gray-dark); padding: 20px;">尚無員工資料</div>';
-                    return;
-                }
-                
-                this.employees.forEach(employee => {
-                    const div = document.createElement('div');
-                    div.className = 'employee-item';
-                    
-                    div.innerHTML = `
-                        <div style="display: flex; align-items: center;">
-                            <div class="employee-avatar">${employee.name[0]}</div>
-                            <div class="employee-info">
-                                <div class="employee-name">${employee.name}</div>
-                                <div class="employee-meta">${employee.phone || '無電話'}</div>
-                            </div>
-                        </div>
-                        <span class="employee-badge ${employee.type === 'parttime' ? 'parttime' : ''}">
-                            ${employee.type === 'fulltime' ? '正職' : 'PT'}
-                        </span>
-                    `;
-                    
-                    div.onclick = () => this.editEmployee(employee);
-                    list.appendChild(div);
-                });
-            },
-            
+
             openEmployeeModal() {
                 document.getElementById('employeeForm').reset();
                 this.editingEmployee = null;
                 document.getElementById('deleteEmployeeBtn').style.display = 'none';
                 document.getElementById('employeeModal').classList.add('show');
             },
-            
+
             editEmployee(employee) {
                 this.editingEmployee = employee;
                 document.getElementById('employeeName').value = employee.name;
@@ -1692,7 +2011,7 @@
                 document.getElementById('deleteEmployeeBtn').style.display = 'inline-flex';
                 document.getElementById('employeeModal').classList.add('show');
             },
-            
+
             saveEmployee() {
                 const name = document.getElementById('employeeName').value.trim();
                 if (!name) {
@@ -1720,7 +2039,7 @@
                 this.renderEmployees();
                 this.closeModal('employeeModal');
             },
-            
+
             deleteEmployee() {
                 if (confirm(`確定要刪除員工 ${this.editingEmployee.name} 嗎？相關排班也會被移除。`)) {
                     const employeeId = this.editingEmployee.id;
@@ -1741,27 +2060,27 @@
                     this.showToast('員工已刪除', 'success');
                 }
             },
-            
+
             getEmployeeName(id) {
                 const emp = this.employees.find(e => e.id === id);
                 return emp ? emp.name : '未知';
             },
-            
+
             previousMonth() {
                 this.currentMonth.setMonth(this.currentMonth.getMonth() - 1);
                 this.renderCalendar();
             },
-            
+
             nextMonth() {
                 this.currentMonth.setMonth(this.currentMonth.getMonth() + 1);
                 this.renderCalendar();
             },
-            
+
             exportCSV() {
                 const year = this.currentMonth.getFullYear();
                 const month = this.currentMonth.getMonth() + 1;
                 
-                let csv = '\ufeff'; // BOM for UTF-8
+                let csv = '\ufeff';
                 csv += '日期,星期,時間,員工,類型,備註\n';
                 
                 const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -1788,28 +2107,9 @@
                 
                 this.showToast('CSV 檔案已匯出', 'success');
             },
-            
+
             closeModal(id) {
                 document.getElementById(id).classList.remove('show');
-            },
-            
-            showToast(message, type = 'success') {
-                const toast = document.getElementById('toast');
-                toast.textContent = message;
-                toast.className = 'toast show';
-                
-                if (type === 'error') {
-                    toast.classList.add('error');
-                } else if (type === 'success') {
-                    toast.classList.add('success');
-                } else if (type === 'warning') {
-                    toast.classList.add('warning');
-                }
-                
-                clearTimeout(this.toastTimeout);
-                this.toastTimeout = setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
             }
         };
         

@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="智能排班管理系統 - 支援 Google Sheets 同步">
+    <meta name="author" content="DK0124">
+    <title>智能排班管理系統 - Google Sheets 整合版</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📅</text></svg>">
+    
+    <style>
+        /* CSS 變數定義 */
+        :root {
+            --primary: #007AFF;
+            --secondary: #5AC8FA;
+            --success: #34C759;
+            --warning: #FF9500;
+            --danger: #FF3B30;
+            --google: #4285F4;
+            --dark: #1C1C1E;
+            --gray: #8E8E93;
+            --light: #F2F2F7;
+            --surface: #FFFFFF;
+            --border: #E5E5EA;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        /* 深色模式 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --dark: #F5F5F7;
+                --light: #1C1C1E;
+                --surface: #2C2C2E;
+                --border: #3A3A3C;
+                --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Google 連線狀態 */
+        .google-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--surface);
+            padding: 10px 15px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .google-status.connected {
+            border: 2px solid var(--success);
+        }
+
+        .google-status.disconnected {
+            border: 2px solid var(--danger);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* 頂部導航 */
+        .header {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Google Sheets 設定區 */
+        .google-config {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .config-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sheet-url-input {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        /* 按鈕 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #0051D5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+        }
+
+        .btn-google {
+            background: var(--google);
+            color: white;
+        }
+
+        .btn-google:hover:not(:disabled) {
+            background: #357ae8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66,133,244,0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 主要佈局 */
+        .main {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        /* 側邊欄 */
+        .sidebar {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        /* 同步資訊 */
+        .sync-info {
+            background: var(--light);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .sync-time {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 員工列表 */
+        .employee-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .employee-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .employee-item:hover {
+            transform: translateX(4px);
+            background: var(--border);
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .employee-info {
+            flex: 1;
+            margin-left: 12px;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .employee-type {
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-ft {
+            background: rgba(52,199,89,0.1);
+            color: var(--success);
+        }
+
+        .badge-pt {
+            background: rgba(255,149,0,0.1);
+            color: var(--warning);
+        }
+
+        /* 日曆 */
+        .calendar {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .calendar-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--gray);
+            padding: 10px;
+        }
+
+        .calendar-date {
+            aspect-ratio: 1;
+            background: var(--light);
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-date:hover {
+            transform: scale(1.05);
+            background: var(--border);
+        }
+
+        .calendar-date.today {
+            background: rgba(0,122,255,0.1);
+            border: 2px solid var(--primary);
+        }
+
+        .calendar-date.other-month {
+            opacity: 0.3;
+        }
+
+        .date-number {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .date-schedules {
+            margin-top: 4px;
+            font-size: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .schedule-chip {
+            background: var(--primary);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .schedule-chip.morning {
+            background: #FF9500;
+        }
+
+        .schedule-chip.afternoon {
+            background: #34C759;
+        }
+
+        .schedule-chip.night {
+            background: #5856D6;
+        }
+
+        /* 模態框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: var(--radius);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 表單 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+        }
+
+        /* 載入動畫 */
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 通知 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--dark);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 2000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        /* 響應式 */
+        @media (max-width: 768px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+            }
+
+            .google-status {
+                position: static;
+                margin-bottom: 10px;
+            }
+
+            .config-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Google 連線狀態指示器 -->
+        <div class="google-status" id="googleStatus">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">未連接 Google</span>
+        </div>
+
+        <!-- 頂部導航 -->
+        <header class="header">
+            <div class="header-top">
+                <h1>📅 智能排班系統</h1>
+                <div class="header-actions">
+                    <button class="btn btn-google" onclick="App.connectGoogle()" id="connectBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        連接 Google
+                    </button>
+                    <button class="btn btn-success" onclick="App.syncToSheets()" id="syncBtn" disabled>
+                        🔄 同步到 Sheets
+                    </button>
+                    <button class="btn btn-secondary" onclick="App.loadFromSheets()" id="loadBtn" disabled>
+                        📥 從 Sheets 載入
+                    </button>
+                    <button class="btn btn-secondary" onclick="App.exportLocal()">
+                        💾 本地備份
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Google Sheets 設定 -->
+            <div class="google-config">
+                <div class="config-row">
+                    <input type="text" 
+                           class="sheet-url-input" 
+                           id="sheetUrl" 
+                           placeholder="貼上您的 Google Sheets 網址 (例如: https://docs.google.com/spreadsheets/d/xxxxx/edit)">
+                    <button class="btn btn-primary" onclick="App.saveSheetUrl()">設定試算表</button>
+                    <button class="btn btn-secondary" onclick="App.createNewSheet()">建立新試算表</button>
+                </div>
+                <small style="color: var(--gray); margin-top: 5px; display: block;">
+                    💡 提示：確保試算表已設為「知道連結的任何人都能編輯」或使用您的 Google 帳號登入
+                </small>
+            </div>
+        </header>
+
+        <!-- 主要內容 -->
+        <main class="main">
+            <!-- 側邊欄 -->
+            <aside class="sidebar">
+                <div class="sync-info">
+                    <div class="sync-time">
+                        <span>最後同步：</span>
+                        <span id="lastSync">尚未同步</span>
+                    </div>
+                    <div class="sync-time" style="margin-top: 5px;">
+                        <span>自動同步：</span>
+                        <input type="checkbox" id="autoSync" onchange="App.toggleAutoSync()">
+                    </div>
+                </div>
+                
+                <h2>👥 員工管理</h2>
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 15px;" onclick="App.openEmployeeModal()">
+                    ➕ 新增員工
+                </button>
+                <div class="employee-list" id="employeeList"></div>
+            </aside>
+
+            <!-- 日曆 -->
+            <section class="calendar">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button class="btn btn-secondary" onclick="App.previousMonth()">◀</button>
+                        <h2 class="calendar-title" id="currentMonth"></h2>
+                        <button class="btn btn-secondary" onclick="App.nextMonth()">▶</button>
+                    </div>
+                    <button class="btn btn-secondary" onclick="App.printSchedule()">
+                        🖨️ 列印
+                    </button>
+                </div>
+                <div class="calendar-grid" id="calendar"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 員工模態框 -->
+    <div class="modal" id="employeeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>員工資料</h3>
+                <button class="btn btn-secondary" onclick="App.closeModal('employeeModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="employeeForm">
+                    <div class="form-group">
+                        <label class="form-label">姓名 *</label>
+                        <input type="text" class="form-control" id="employeeName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">類型</label>
+                        <select class="form-control" id="employeeType">
+                            <option value="fulltime">正職</option>
+                            <option value="parttime">兼職 (PT)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">電話</label>
+                        <input type="tel" class="form-control" id="employeePhone">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="employeeEmail">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="App.closeModal('employeeModal')">取消</button>
+                <button class="btn btn-primary" onclick="App.saveEmployee()">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排班模態框 -->
+    <div class="modal" id="scheduleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="scheduleTitle">排班設定</h3>
+                <button class="btn btn-secondary" onclick="App.closeModal('scheduleModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleForm">
+                    <div class="form-group">
+                        <label class="form-label">選擇員工 (可多選)</label>
+                        <select class="form-control" id="scheduleEmployee" multiple style="height: 120px;"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">班次</label>
+                        <select class="form-control" id="scheduleShift">
+                            <option value="morning">早班 (06:00-14:00)</option>
+                            <option value="afternoon">午班 (14:00-22:00)</option>
+                            <option value="night">晚班 (22:00-06:00)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">備註</label>
+                        <textarea class="form-control" id="scheduleNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="App.closeModal('scheduleModal')">取消</button>
+                <button class="btn btn-primary" onclick="App.saveSchedule()">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Google API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+
+    <script>
+        // 應用程式主物件
+        const App = {
+            // 資料
+            employees: [],
+            schedules: {},
+            currentMonth: new Date(),
+            currentDate: null,
+            editingEmployee: null,
+            
+            // Google Sheets 設定
+            CLIENT_ID: 'YOUR_CLIENT_ID.apps.googleusercontent.com', // 需要替換
+            API_KEY: 'YOUR_API_KEY', // 需要替換
+            DISCOVERY_DOCS: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+            SCOPES: 'https://www.googleapis.com/auth/spreadsheets',
+            
+            spreadsheetId: null,
+            isConnected: false,
+            autoSyncInterval: null,
+            tokenClient: null,
+            accessToken: null,
+            
+            // 初始化
+            init() {
+                this.loadLocalData();
+                this.renderCalendar();
+                this.renderEmployees();
+                this.loadSheetUrl();
+                
+                // 初始化 Google API
+                if (typeof gapi !== 'undefined') {
+                    gapi.load('client', () => {
+                        this.initializeGoogleAPI();
+                    });
+                }
+                
+                // 監聽 localStorage 變化
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'scheduleData') {
+                        this.loadLocalData();
+                        this.renderCalendar();
+                        this.renderEmployees();
+                    }
+                });
+            },
+            
+            // 初始化 Google API
+            async initializeGoogleAPI() {
+                try {
+                    // 如果沒有設定 CLIENT_ID，使用簡化模式
+                    if (this.CLIENT_ID === 'YOUR_CLIENT_ID.apps.googleusercontent.com') {
+                        console.log('使用公開試算表模式（只讀）');
+                        this.showToast('請設定 Google API 憑證以啟用完整功能', 'warning');
+                        return;
+                    }
+
+                    await gapi.client.init({
+                        apiKey: this.API_KEY,
+                        discoveryDocs: this.DISCOVERY_DOCS
+                    });
+
+                    // 初始化 token client
+                    this.tokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: this.CLIENT_ID,
+                        scope: this.SCOPES,
+                        callback: (response) => {
+                            this.handleAuthResponse(response);
+                        }
+                    });
+                } catch (error) {
+                    console.error('Google API 初始化失敗:', error);
+                    this.showToast('Google API 初始化失敗', 'error');
+                }
+            },
+            
+            // 連接 Google
+            async connectGoogle() {
+                if (!this.spreadsheetId) {
+                    this.showToast('請先設定 Google Sheets 網址', 'error');
+                    return;
+                }
+
+                // 簡化模式：直接嘗試連接公開試算表
+                if (this.CLIENT_ID === 'YOUR_CLIENT_ID.apps.googleusercontent.com') {
+                    this.tryPublicSheetAccess();
+                    return;
+                }
+
+                // 完整模式：使用 OAuth
+                if (this.tokenClient) {
+                    this.tokenClient.requestAccessToken();
+                } else {
+                    this.showToast('Google API 尚未初始化', 'error');
+                }
+            },
+
+            // 嘗試存取公開試算表
+            async tryPublicSheetAccess() {
+                try {
+                    // 使用 fetch 直接讀取公開試算表
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/A1:Z1000?key=${this.API_KEY}`;
+                    const response = await fetch(url);
+                    
+                    if (response.ok) {
+                        this.updateConnectionStatus(true);
+                        this.showToast('已連接到公開試算表（唯讀模式）', 'success');
+                        document.getElementById('loadBtn').disabled = false;
+                    } else {
+                        throw new Error('無法存取試算表');
+                    }
+                } catch (error) {
+                    this.showToast('請確認試算表已設為公開檢視', 'error');
+                }
+            },
+            
+            // 處理授權回應
+            handleAuthResponse(response) {
+                if (response.access_token) {
+                    this.accessToken = response.access_token;
+                    this.updateConnectionStatus(true);
+                    this.showToast('已成功連接 Google 帳號', 'success');
+                } else {
+                    this.updateConnectionStatus(false);
+                    this.showToast('Google 授權失敗', 'error');
+                }
+            },
+            
+            // 更新連線狀態
+            updateConnectionStatus(connected) {
+                this.isConnected = connected;
+                const status = document.getElementById('googleStatus');
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                const connectBtn = document.getElementById('connectBtn');
+                const syncBtn = document.getElementById('syncBtn');
+                const loadBtn = document.getElementById('loadBtn');
+                
+                if (connected) {
+                    status.classList.add('connected');
+                    status.classList.remove('disconnected');
+                    statusDot.classList.add('connected');
+                    statusText.textContent = '已連接 Google';
+                    connectBtn.textContent = '✓ 已連接';
+                    connectBtn.disabled = true;
+                    syncBtn.disabled = false;
+                    loadBtn.disabled = false;
+                } else {
+                    status.classList.remove('connected');
+                    status.classList.add('disconnected');
+                    statusDot.classList.remove('connected');
+                    statusText.textContent = '未連接 Google';
+                    connectBtn.textContent = '連接 Google';
+                    connectBtn.disabled = false;
+                    syncBtn.disabled = true;
+                    loadBtn.disabled = true;
+                }
+            },
+            
+            // 儲存試算表網址
+            saveSheetUrl() {
+                const url = document.getElementById('sheetUrl').value.trim();
+                if (!url) {
+                    this.showToast('請輸入 Google Sheets 網址', 'error');
+                    return;
+                }
+                
+                // 從網址提取試算表 ID
+                const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+                if (match) {
+                    this.spreadsheetId = match[1];
+                    localStorage.setItem('spreadsheetId', this.spreadsheetId);
+                    this.showToast('試算表設定成功', 'success');
+                    
+                    // 自動嘗試連接
+                    if (this.CLIENT_ID !== 'YOUR_CLIENT_ID.apps.googleusercontent.com') {
+                        this.connectGoogle();
+                    }
+                } else {
+                    this.showToast('無效的 Google Sheets 網址', 'error');
+                }
+            },
+            
+            // 載入儲存的試算表網址
+            loadSheetUrl() {
+                const savedId = localStorage.getItem('spreadsheetId');
+                if (savedId) {
+                    this.spreadsheetId = savedId;
+                    document.getElementById('sheetUrl').value = 
+                        `https://docs.google.com/spreadsheets/d/${savedId}/edit`;
+                }
+            },
+            
+            // 建立新試算表
+            async createNewSheet() {
+                if (!this.isConnected) {
+                    this.showToast('請先連接 Google 帳號', 'error');
+                    return;
+                }
+                
+                try {
+                    const response = await gapi.client.sheets.spreadsheets.create({
+                        properties: {
+                            title: `排班表_${new Date().toLocaleDateString('zh-TW')}`
+                        }
+                    });
+                    
+                    this.spreadsheetId = response.result.spreadsheetId;
+                    localStorage.setItem('spreadsheetId', this.spreadsheetId);
+                    
+                    const url = `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/edit`;
+                    document.getElementById('sheetUrl').value = url;
+                    
+                    // 初始化試算表結構
+                    await this.initializeSheet();
+                    
+                    this.showToast('新試算表已建立', 'success');
+                    
+                    // 在新視窗開啟
+                    window.open(url, '_blank');
+                } catch (error) {
+                    console.error('建立試算表失敗:', error);
+                    this.showToast('建立試算表失敗', 'error');
+                }
+            },
+            
+            // 初始化試算表結構
+            async initializeSheet() {
+                const headers = [
+                    ['排班管理系統'],
+                    [],
+                    ['員工資料'],
+                    ['ID', '姓名', '類型', '電話', 'Email'],
+                    [],
+                    [],
+                    ['排班資料'],
+                    ['日期', '員工ID', '員工姓名', '班次', '備註']
+                ];
+                
+                try {
+                    await gapi.client.sheets.spreadsheets.values.update({
+                        spreadsheetId: this.spreadsheetId,
+                        range: 'A1:E8',
+                        valueInputOption: 'RAW',
+                        resource: {
+                            values: headers
+                        }
+                    });
+                } catch (error) {
+                    console.error('初始化試算表失敗:', error);
+                }
+            },
+            
+            // 同步到 Sheets
+            async syncToSheets() {
+                if (!this.isConnected || !this.spreadsheetId) {
+                    this.showToast('請先連接 Google 並設定試算表', 'error');
+                    return;
+                }
+                
+                try {
+                    // 準備員工資料
+                    const employeeData = [
+                        ['員工資料'],
+                        ['ID', '姓名', '類型', '電話', 'Email']
+                    ];
+                    
+                    this.employees.forEach(emp => {
+                        employeeData.push([
+                            emp.id,
+                            emp.name,
+                            emp.type === 'fulltime' ? '正職' : 'PT',
+                            emp.phone || '',
+                            emp.email || ''
+                        ]);
+                    });
+                    
+                    // 準備排班資料
+                    const scheduleData = [
+                        [],
+                        ['排班資料'],
+                        ['日期', '員工姓名', '班次', '備註']
+                    ];
+                    
+                    Object.entries(this.schedules).forEach(([date, schedules]) => {
+                        schedules.forEach(schedule => {
+                            const employee = this.employees.find(e => e.id === schedule.employeeId);
+                            scheduleData.push([
+                                date,
+                                employee ? employee.name : '未知',
+                                this.getShiftName(schedule.shift),
+                                schedule.notes || ''
+                            ]);
+                        });
+                    });
+                    
+                    // 合併資料
+                    const allData = [...employeeData, ...scheduleData];
+                    
+                    // 更新試算表
+                    await gapi.client.sheets.spreadsheets.values.update({
+                        spreadsheetId: this.spreadsheetId,
+                        range: 'A1:E' + allData.length,
+                        valueInputOption: 'RAW',
+                        resource: {
+                            values: allData
+                        }
+                    });
+                    
+                    // 更新最後同步時間
+                    const now = new Date().toLocaleString('zh-TW');
+                    document.getElementById('lastSync').textContent = now;
+                    localStorage.setItem('lastSync', now);
+                    
+                    this.showToast('已成功同步到 Google Sheets', 'success');
+                } catch (error) {
+                    console.error('同步失敗:', error);
+                    this.showToast('同步失敗：' + error.message, 'error');
+                }
+            },
+            
+            // 從 Sheets 載入
+            async loadFromSheets() {
+                if (!this.spreadsheetId) {
+                    this.showToast('請先設定試算表', 'error');
+                    return;
+                }
+                
+                try {
+                    let response;
+                    
+                    // 根據連線狀態選擇讀取方式
+                    if (this.isConnected && this.accessToken) {
+                        // 使用授權方式讀取
+                        response = await gapi.client.sheets.spreadsheets.values.get({
+                            spreadsheetId: this.spreadsheetId,
+                            range: 'A1:E1000'
+                        });
+                    } else {
+                        // 使用公開方式讀取（需要試算表設為公開）
+                        const url = `https://sheets.googleapis.com/v4/spreadsheets/${this.spreadsheetId}/values/A1:E1000?key=${this.API_KEY || 'AIzaSyBQJ0vlLxH5FkVg6s0CRgPTTzg0cBx6_nQ'}`;
+                        const fetchResponse = await fetch(url);
+                        
+                        if (!fetchResponse.ok) {
+                            throw new Error('無法讀取試算表，請確認試算表已設為公開檢視');
+                        }
+                        
+                        const data = await fetchResponse.json();
+                        response = { result: data };
+                    }
+                    
+                    const values = response.result.values;
+                    if (!values || values.length === 0) {
+                        this.showToast('試算表沒有資料', 'warning');
+                        return;
+                    }
+                    
+                    // 解析資料
+                    this.employees = [];
+                    this.schedules = {};
+                    
+                    let section = '';
+                    for (let i = 0; i < values.length; i++) {
+                        const row = values[i];
+                        
+                        if (row[0] === '員工資料') {
+                            section = 'employees';
+                            i++; // 跳過標題行
+                            continue;
+                        } else if (row[0] === '排班資料') {
+                            section = 'schedules';
+                            i++; // 跳過標題行
+                            continue;
+                        }
+                        
+                        if (section === 'employees' && row[0] && row[1]) {
+                            if (row[0] !== 'ID') { // 跳過標題
+                                this.employees.push({
+                                    id: parseInt(row[0]),
+                                    name: row[1],
+                                    type: row[2] === '正職' ? 'fulltime' : 'parttime',
+                                    phone: row[3] || '',
+                                    email: row[4] || ''
+                                });
+                            }
+                        } else if (section === 'schedules' && row[0] && row[1]) {
+                            if (row[0] !== '日期') { // 跳過標題
+                                const date = row[0];
+                                const employeeName = row[1];
+                                const shift = this.getShiftValue(row[2]);
+                                
+                                // 找到對應的員工 ID
+                                const employee = this.employees.find(e => e.name === employeeName);
+                                if (employee) {
+                                    if (!this.schedules[date]) {
+                                        this.schedules[date] = [];
+                                    }
+                                    
+                                    this.schedules[date].push({
+                                        employeeId: employee.id,
+                                        shift: shift,
+                                        notes: row[3] || ''
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 儲存並更新顯示
+                    this.saveLocalData();
+                    this.renderCalendar();
+                    this.renderEmployees();
+                    
+                    this.showToast('已從 Google Sheets 載入資料', 'success');
+                } catch (error) {
+                    console.error('載入失敗:', error);
+                    this.showToast('載入失敗：' + error.message, 'error');
+                }
+            },
+            
+            // 取得班次值
+            getShiftValue(shiftName) {
+                const shifts = {
+                    '早班': 'morning',
+                    '午班': 'afternoon',
+                    '晚班': 'night'
+                };
+                return shifts[shiftName] || 'morning';
+            },
+            
+            // 切換自動同步
+            toggleAutoSync() {
+                const enabled = document.getElementById('autoSync').checked;
+                
+                if (enabled && this.isConnected) {
+                    // 每5分鐘同步一次
+                    this.autoSyncInterval = setInterval(() => {
+                        this.syncToSheets();
+                    }, 5 * 60 * 1000);
+                    
+                    this.showToast('已啟用自動同步（每5分鐘）', 'success');
+                } else {
+                    if (this.autoSyncInterval) {
+                        clearInterval(this.autoSyncInterval);
+                        this.autoSyncInterval = null;
+                    }
+                    this.showToast('已停用自動同步', 'info');
+                }
+                
+                localStorage.setItem('autoSync', enabled);
+            },
+            
+            // 載入本地資料
+            loadLocalData() {
+                const saved = localStorage.getItem('scheduleData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    this.employees = data.employees || [];
+                    this.schedules = data.schedules || {};
+                } else {
+                    // 預設資料
+                    this.employees = [
+                        { id: 1, name: '王小明', type: 'fulltime', phone: '0912345678', email: 'ming@example.com' },
+                        { id: 2, name: '李小華', type: 'fulltime', phone: '0923456789', email: 'hua@example.com' },
+                        { id: 3, name: '張大偉', type: 'parttime', phone: '0934567890', email: 'wei@example.com' }
+                    ];
+                    this.saveLocalData();
+                }
+                
+                // 載入最後同步時間
+                const lastSync = localStorage.getItem('lastSync');
+                if (lastSync) {
+                    document.getElementById('lastSync').textContent = lastSync;
+                }
+                
+                // 載入自動同步設定
+                const autoSync = localStorage.getItem('autoSync') === 'true';
+                document.getElementById('autoSync').checked = autoSync;
+                if (autoSync && this.isConnected) {
+                    this.toggleAutoSync();
+                }
+            },
+            
+            // 儲存本地資料
+            saveLocalData() {
+                const data = {
+                    employees: this.employees,
+                    schedules: this.schedules,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('scheduleData', JSON.stringify(data));
+            },
+            
+            // 匯出本地備份
+            exportLocal() {
+                const data = {
+                    employees: this.employees,
+                    schedules: this.schedules,
+                    exportDate: new Date().toISOString(),
+                    spreadsheetId: this.spreadsheetId
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], {
+                    type: 'application/json'
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `schedule_backup_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                
+                this.showToast('本地備份已下載', 'success');
+            },
+            
+            // 渲染日曆
+            renderCalendar() {
+                const year = this.currentMonth.getFullYear();
+                const month = this.currentMonth.getMonth();
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const prevLastDay = new Date(year, month, 0);
+                const firstDayOfWeek = firstDay.getDay();
+                const daysInMonth = lastDay.getDate();
+                const prevDaysInMonth = prevLastDay.getDate();
+                
+                // 更新月份標題
+                document.getElementById('currentMonth').textContent = 
+                    `${year}年${month + 1}月`;
+                
+                // 建立日曆
+                const calendar = document.getElementById('calendar');
+                calendar.innerHTML = '';
+                
+                // 星期標題
+                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+                weekdays.forEach(day => {
+                    const div = document.createElement('div');
+                    div.className = 'weekday';
+                    div.textContent = day;
+                    calendar.appendChild(div);
+                });
+                
+                // 上個月日期
+                for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+                    const date = prevDaysInMonth - i;
+                    const div = this.createDateElement(date, true);
+                    calendar.appendChild(div);
+                }
+                
+                // 當月日期
+                const today = new Date();
+                for (let date = 1; date <= daysInMonth; date++) {
+                    const isToday = year === today.getFullYear() && 
+                                   month === today.getMonth() && 
+                                   date === today.getDate();
+                    const div = this.createDateElement(date, false, isToday);
+                    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                    
+                    // 加入排班資訊
+                    if (this.schedules[dateKey]) {
+                        const scheduleDiv = document.createElement('div');
+                        scheduleDiv.className = 'date-schedules';
+                        
+                        this.schedules[dateKey].forEach(schedule => {
+                            const chip = document.createElement('div');
+                            chip.className = `schedule-chip ${schedule.shift}`;
+                            chip.textContent = this.getEmployeeName(schedule.employeeId);
+                            chip.title = `${this.getEmployeeName(schedule.employeeId)} - ${this.getShiftName(schedule.shift)}`;
+                            scheduleDiv.appendChild(chip);
+                        });
+                        
+                        div.appendChild(scheduleDiv);
+                    }
+                    
+                    calendar.appendChild(div);
+                }
+                
+                // 下個月日期
+                const totalCells = calendar.children.length - 7;
+                const remainingCells = 35 - totalCells;
+                for (let date = 1; date <= remainingCells; date++) {
+                    const div = this.createDateElement(date, true);
+                    calendar.appendChild(div);
+                }
+            },
+            
+            // 建立日期元素
+            createDateElement(date, isOtherMonth, isToday) {
+                const div = document.createElement('div');
+                div.className = 'calendar-date';
+                if (isOtherMonth) div.classList.add('other-month');
+                if (isToday) div.classList.add('today');
+                
+                const dateNumber = document.createElement('div');
+                dateNumber.className = 'date-number';
+                dateNumber.textContent = date;
+                div.appendChild(dateNumber);
+                
+                if (!isOtherMonth) {
+                    div.onclick = () => this.openScheduleModal(date);
+                }
+                
+                return div;
+            },
+            
+            // 渲染員工列表
+            renderEmployees() {
+                const list = document.getElementById('employeeList');
+                list.innerHTML = '';
+                
+                this.employees.forEach(employee => {
+                    const div = document.createElement('div');
+                    div.className = 'employee-item';
+                    
+                    div.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <div class="employee-avatar">${employee.name[0]}</div>
+                            <div class="employee-info">
+                                <div class="employee-name">${employee.name}</div>
+                                <div class="employee-type">${employee.phone || '無電話'}</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-${employee.type === 'fulltime' ? 'ft' : 'pt'}">
+                            ${employee.type === 'fulltime' ? '正職' : 'PT'}
+                        </span>
+                    `;
+                    
+                    div.ondblclick = () => this.editEmployee(employee);
+                    list.appendChild(div);
+                });
+            },
+            
+            // 開啟員工模態框
+            openEmployeeModal() {
+                document.getElementById('employeeForm').reset();
+                this.editingEmployee = null;
+                document.getElementById('employeeModal').classList.add('show');
+            },
+            
+            // 編輯員工
+            editEmployee(employee) {
+                this.editingEmployee = employee;
+                document.getElementById('employeeName').value = employee.name;
+                document.getElementById('employeeType').value = employee.type;
+                document.getElementById('employeePhone').value = employee.phone || '';
+                document.getElementById('employeeEmail').value = employee.email || '';
+                document.getElementById('employeeModal').classList.add('show');
+            },
+            
+            // 儲存員工
+            saveEmployee() {
+                const name = document.getElementById('employeeName').value.trim();
+                if (!name) {
+                    this.showToast('請輸入員工姓名', 'error');
+                    return;
+                }
+                
+                const employee = {
+                    name,
+                    type: document.getElementById('employeeType').value,
+                    phone: document.getElementById('employeePhone').value,
+                    email: document.getElementById('employeeEmail').value
+                };
+                
+                if (this.editingEmployee) {
+                    Object.assign(this.editingEmployee, employee);
+                } else {
+                    employee.id = Date.now();
+                    this.employees.push(employee);
+                }
+                
+                this.saveLocalData();
+                this.renderEmployees();
+                this.closeModal('employeeModal');
+                this.showToast('員工資料已儲存');
+                
+                // 如果啟用自動同步，立即同步
+                if (document.getElementById('autoSync').checked && this.isConnected) {
+                    this.syncToSheets();
+                }
+            },
+            
+            // 開啟排班模態框
+            openScheduleModal(date) {
+                const year = this.currentMonth.getFullYear();
+                const month = this.currentMonth.getMonth();
+                this.currentDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                
+                document.getElementById('scheduleTitle').textContent = 
+                    `${year}年${month + 1}月${date}日 排班設定`;
+                
+                // 填充員工選項
+                const select = document.getElementById('scheduleEmployee');
+                select.innerHTML = '';
+                this.employees.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp.id;
+                    option.textContent = `${emp.name} (${emp.type === 'fulltime' ? '正職' : 'PT'})`;
+                    select.appendChild(option);
+                });
+                
+                // 載入現有排班
+                const existing = this.schedules[this.currentDate];
+                if (existing && existing.length > 0) {
+                    const employeeIds = existing.map(s => s.employeeId);
+                    Array.from(select.options).forEach(opt => {
+                        if (employeeIds.includes(Number(opt.value))) {
+                            opt.selected = true;
+                        }
+                    });
+                    document.getElementById('scheduleShift').value = existing[0].shift;
+                    document.getElementById('scheduleNotes').value = existing[0].notes || '';
+                }
+                
+                document.getElementById('scheduleModal').classList.add('show');
+            },
+            
+            // 儲存排班
+            saveSchedule() {
+                const select = document.getElementById('scheduleEmployee');
+                const selectedEmployees = Array.from(select.selectedOptions);
+                
+                if (selectedEmployees.length === 0) {
+                    this.showToast('請選擇至少一位員工', 'error');
+                    return;
+                }
+                
+                const shift = document.getElementById('scheduleShift').value;
+                const notes = document.getElementById('scheduleNotes').value;
+                
+                this.schedules[this.currentDate] = selectedEmployees.map(opt => ({
+                    employeeId: Number(opt.value),
+                    shift,
+                    notes
+                }));
+                
+                this.saveLocalData();
+                this.renderCalendar();
+                this.closeModal('scheduleModal');
+                this.showToast('排班已儲存');
+                
+                // 如果啟用自動同步，立即同步
+                if (document.getElementById('autoSync').checked && this.isConnected) {
+                    this.syncToSheets();
+                }
+            },
+            
+            // 取得員工姓名
+            getEmployeeName(id) {
+                const emp = this.employees.find(e => e.id === id);
+                return emp ? emp.name : '未知';
+            },
+            
+            // 取得班次名稱
+            getShiftName(shift) {
+                const names = {
+                    morning: '早班',
+                    afternoon: '午班',
+                    night: '晚班'
+                };
+                return names[shift] || shift;
+            },
+            
+            // 上一個月
+            previousMonth() {
+                this.currentMonth.setMonth(this.currentMonth.getMonth() - 1);
+                this.renderCalendar();
+            },
+            
+            // 下一個月
+            nextMonth() {
+                this.currentMonth.setMonth(this.currentMonth.getMonth() + 1);
+                this.renderCalendar();
+            },
+            
+            // 關閉模態框
+            closeModal(id) {
+                document.getElementById(id).classList.remove('show');
+            },
+            
+            // 顯示通知
+            showToast(message, type = 'info') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = 'toast show';
+                
+                if (type === 'error') {
+                    toast.classList.add('error');
+                } else if (type === 'success') {
+                    toast.classList.add('success');
+                }
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            },
+            
+            // 列印排班表
+            printSchedule() {
+                window.print();
+            }
+        };
+        
+        // 啟動應用程式
+        document.addEventListener('DOMContentLoaded', () => {
+            App.init();
+        });
+    </script>
+</body>
+</html>

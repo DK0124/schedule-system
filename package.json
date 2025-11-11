@@ -1,0 +1,19 @@
+{
+  "name": "schedule-system",
+  "version": "1.0.0",
+  "description": "智能排班管理系統 - 純前端實作",
+  "main": "index.html",
+  "author": "DK0124",
+  "license": "MIT",
+  "keywords": [
+    "schedule",
+    "employee",
+    "management",
+    "calendar",
+    "shift"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DK0124/schedule-system.git"
+  }
+}

@@ -1,3 +1,132 @@
+我來為您修正這兩個問題：
+1. 修改日曆內的人物顯示，按照時間順序分行排列
+2. 提供新的 Google Apps Script 程式碼
+
+## 先提供 Google Apps Script 程式碼
+請在您的 Google Sheets 中更新這段程式碼：
+
+````javascript name=Code.gs
+// Google Apps Script - 完整版本
+// 這個檔案要貼在 Google Apps Script 編輯器中
+
+function doGet(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet();
+    const sheetName = e.parameter.sheet || 'data';
+    
+    let targetSheet;
+    try {
+      targetSheet = sheet.getSheetByName(sheetName);
+      if (!targetSheet) {
+        targetSheet = sheet.insertSheet(sheetName);
+      }
+    } catch (err) {
+      targetSheet = sheet.insertSheet(sheetName);
+    }
+    
+    const data = targetSheet.getDataRange().getValues();
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: true,
+        data: data,
+        timestamp: new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders({
+        'Access-Control-Allow-Origin': '*'
+      });
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        error: error.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet();
+    const requestData = JSON.parse(e.postData.contents);
+    
+    const sheetName = requestData.sheet || 'data';
+    let targetSheet;
+    
+    try {
+      targetSheet = sheet.getSheetByName(sheetName);
+      if (!targetSheet) {
+        targetSheet = sheet.insertSheet(sheetName);
+      }
+    } catch (err) {
+      targetSheet = sheet.insertSheet(sheetName);
+    }
+    
+    // 清空並寫入新資料
+    targetSheet.clear();
+    
+    if (requestData.data && requestData.data.length > 0) {
+      const range = targetSheet.getRange(1, 1, requestData.data.length, requestData.data[0].length);
+      range.setValues(requestData.data);
+      
+      // 自動調整欄寬
+      for (let i = 1; i <= requestData.data[0].length; i++) {
+        targetSheet.autoResizeColumn(i);
+      }
+    }
+    
+    // 記錄更新
+    const logSheet = getOrCreateLogSheet(sheet);
+    logSheet.appendRow([
+      new Date(),
+      'UPDATE',
+      sheetName,
+      requestData.data ? requestData.data.length : 0
+    ]);
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: true,
+        message: '資料已更新',
+        rowsUpdated: requestData.data ? requestData.data.length : 0,
+        timestamp: new Date().toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeaders({
+        'Access-Control-Allow-Origin': '*'
+      });
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        error: error.toString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function getOrCreateLogSheet(spreadsheet) {
+  let logSheet;
+  try {
+    logSheet = spreadsheet.getSheetByName('_LOG');
+  } catch (e) {
+    logSheet = spreadsheet.insertSheet('_LOG');
+    logSheet.appendRow(['時間', '操作', '工作表', '資料筆數']);
+  }
+  return logSheet;
+}
+````
+
+## 更新後的完整 index.html（修正版）
+
+由於檔案很長，我會分成兩部分給您：
+
+### 第一部分 - HTML 和 CSS
+
+````html
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -244,25 +373,46 @@
             pointer-events: none; 
         }
         
+        /* 新的時段排列樣式 */
         .daily-schedules { 
             display: flex; 
-            flex-wrap: wrap; 
-            gap: 6px; 
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+        }
+        
+        .schedule-time-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        
+        .time-label {
+            font-size: 10px;
+            color: var(--bleu-gray-dark);
+            min-width: 35px;
+            font-weight: 600;
         }
         
         .employee-avatar-badge {
-            width: 26px; 
-            height: 26px; 
+            width: 24px; 
+            height: 24px; 
             border-radius: 50%;
             display: flex; 
             align-items: center; 
             justify-content: center;
-            font-size: 12px; 
+            font-size: 11px; 
             font-weight: 600; 
             color: white;
             transition: var(--bleu-transition); 
             border: 2px solid var(--bleu-white);
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .employee-avatar-badge:hover {
+            transform: scale(1.1);
+            z-index: 10;
         }
         
         .more-schedules { 
@@ -327,6 +477,16 @@
             display: flex; 
             align-items: center; 
             gap: 8px;
+        }
+
+        .sync-status {
+            font-size: 12px;
+            color: var(--bleu-gray-dark);
+            margin-top: 10px;
+        }
+
+        .sync-status.connected {
+            color: #28A745;
         }
 
         .item-list { 
@@ -630,9 +790,17 @@
                 padding: 8px 12px; 
                 font-size: 13px; 
             }
+            .time-label {
+                display: none;
+            }
         }
     </style>
 </head>
+````
+
+### 第二部分 - HTML Body 和 JavaScript
+
+````html
 <body>
     <div class="app">
         <div class="page-title">
@@ -678,7 +846,7 @@
         </div>
         <div class="panel-content">
             <div class="panel-section">
-                <h3><span class="material-icons-outlined">cloud_sync</span>雲端同步</h3>
+                <h3><span class="material-icons-outlined">cloud_sync</span>Google Sheets 雲端同步</h3>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <button class="btn btn-accent" onclick="App.syncToSheets()" id="uploadBtn">
                         <span class="material-icons-outlined">cloud_upload</span>
@@ -688,6 +856,10 @@
                         <span class="material-icons-outlined">cloud_download</span>
                         從雲端載入
                     </button>
+                </div>
+                <div class="sync-status" id="syncStatus">
+                    狀態：<span id="syncStatusText">未連線</span><br>
+                    最後同步：<span id="lastSyncTime">無</span>
                 </div>
             </div>
             <div class="panel-section">
@@ -832,7 +1004,7 @@
 
     <!-- 通知 -->
     <div class="toast" id="toast"></div>
-    
+
     <script>
         const App = {
             employees: [],
@@ -842,12 +1014,15 @@
             editingEmployee: null,
             currentDate: null,
             scriptUrl: 'https://script.google.com/macros/s/AKfycbyYCnrYAiYylH57XAwFPeDwi6pQa1FEEBAVUlFly-vgvfgit3sX9l9QAwvaetuWO92d3A/exec',
+            isConnected: false,
+            lastSyncTime: null,
 
             async init() {
                 this.loadData();
                 this.initDefaultShifts();
                 this.renderAll();
                 this.setupPanelDrag();
+                this.loadSyncStatus();
                 window.addEventListener('storage', () => this.handleStorageChange());
             },
 
@@ -962,25 +1137,47 @@
                 schedulesDiv.className = 'daily-schedules';
                 
                 const daySchedules = this.schedules[dateKey] || [];
+                
                 if (daySchedules.length > 0) {
-                    const MAX_AVATARS = 6;
-                    const employeeIds = [...new Set(daySchedules.map(s => s.employeeId))];
-                    
-                    employeeIds.slice(0, MAX_AVATARS).forEach(id => {
-                        const employee = this.getEmployeeById(id);
-                        if (employee) {
-                            const badge = this.createAvatarBadge(employee, daySchedules.filter(s => s.employeeId === id));
-                            schedulesDiv.appendChild(badge);
+                    // 按時間排序並分組
+                    const timeGroups = {};
+                    daySchedules.forEach(schedule => {
+                        const timeKey = `${schedule.startTime}-${schedule.endTime}`;
+                        if (!timeGroups[timeKey]) {
+                            timeGroups[timeKey] = [];
                         }
+                        timeGroups[timeKey].push(schedule);
                     });
                     
-                    if (employeeIds.length > MAX_AVATARS) {
-                        const moreBadge = document.createElement('div');
-                        moreBadge.className = 'employee-avatar-badge more-schedules';
-                        moreBadge.textContent = `+${employeeIds.length - MAX_AVATARS}`;
-                        moreBadge.title = `還有 ${employeeIds.length - MAX_AVATARS} 人`;
-                        schedulesDiv.appendChild(moreBadge);
-                    }
+                    // 排序時間段
+                    const sortedTimes = Object.keys(timeGroups).sort((a, b) => {
+                        const aStart = this.timeToMinutes(a.split('-')[0]);
+                        const bStart = this.timeToMinutes(b.split('-')[0]);
+                        return aStart - bStart;
+                    });
+                    
+                    // 為每個時間段創建一行
+                    sortedTimes.forEach(time => {
+                        const timeGroup = document.createElement('div');
+                        timeGroup.className = 'schedule-time-group';
+                        
+                        // 時間標籤
+                        const timeLabel = document.createElement('span');
+                        timeLabel.className = 'time-label';
+                        timeLabel.textContent = time.split('-')[0];
+                        timeGroup.appendChild(timeLabel);
+                        
+                        // 該時段的員工頭像
+                        timeGroups[time].forEach(schedule => {
+                            const employee = this.getEmployeeById(schedule.employeeId);
+                            if (employee) {
+                                const badge = this.createAvatarBadge(employee, schedule);
+                                timeGroup.appendChild(badge);
+                            }
+                        });
+                        
+                        schedulesDiv.appendChild(timeGroup);
+                    });
                 }
                 
                 cell.appendChild(numberDiv);
@@ -989,14 +1186,12 @@
                 return cell;
             },
 
-            createAvatarBadge(employee, schedules) {
+            createAvatarBadge(employee, schedule) {
                 const badge = document.createElement('div');
                 badge.className = 'employee-avatar-badge';
                 badge.textContent = employee.avatarText || employee.name.charAt(0);
                 badge.style.backgroundColor = this.generateColorById(employee.id);
-                
-                const scheduleInfo = schedules.map(s => `${s.startTime}-${s.endTime}`).join(', ');
-                badge.title = `${employee.name}\n${scheduleInfo}`;
+                badge.title = `${employee.name}\n${schedule.startTime}-${schedule.endTime}${schedule.notes ? '\n備註: ' + schedule.notes : ''}`;
                 return badge;
             },
 
@@ -1186,7 +1381,12 @@
                     return;
                 }
                 
-                schedules.forEach((schedule, index) => {
+                // 按時間排序
+                const sortedSchedules = [...schedules].sort((a, b) => {
+                    return this.timeToMinutes(a.startTime) - this.timeToMinutes(b.startTime);
+                });
+                
+                sortedSchedules.forEach((schedule, index) => {
                     const div = document.createElement('div');
                     div.className = 'scheduled-item';
                     div.innerHTML = `
@@ -1194,7 +1394,7 @@
                             <span class="scheduled-name">${this.getEmployeeName(schedule.employeeId)}</span>
                             <span class="scheduled-time">${schedule.startTime} - ${schedule.endTime}</span>
                         </div>
-                        <button class="btn btn-icon" onclick="App.removeSchedule(${index})">
+                        <button class="btn btn-icon" onclick="App.removeSchedule(${schedules.indexOf(schedule)})">
                             <span class="material-icons">remove</span>
                         </button>
                     `;
@@ -1399,6 +1599,7 @@
                     
                     const response = await fetch(this.scriptUrl, {
                         method: 'POST',
+                        mode: 'no-cors',
                         headers: {
                             'Content-Type': 'text/plain;charset=utf-8',
                         },
@@ -1408,15 +1609,13 @@
                         })
                     });
                     
-                    const now = new Date();
-                    localStorage.setItem('lastSync', now.toISOString());
-                    
+                    this.updateSyncStatus(true);
                     this.showToast('資料已成功上傳到 Google Sheets！', 'success');
                     
                 } catch (error) {
-                    const now = new Date();
-                    localStorage.setItem('lastSync', now.toISOString());
-                    this.showToast('資料已發送到雲端', 'success');
+                    console.error('上傳錯誤:', error);
+                    this.updateSyncStatus(false);
+                    this.showToast('上傳失敗，請檢查網路連線', 'error');
                 } finally {
                     uploadBtn.innerHTML = originalHTML;
                     uploadBtn.disabled = false;
@@ -1430,13 +1629,14 @@
                 downloadBtn.disabled = true;
                 
                 try {
-                    const response = await fetch(this.scriptUrl);
+                    const response = await fetch(this.scriptUrl + '?sheet=data');
                     const result = await response.json();
                     
                     if (result.success && result.data) {
                         this.parseSheetData(result.data);
                         this.saveData();
                         this.renderAll();
+                        this.updateSyncStatus(true);
                         this.showToast('已從 Google Sheets 載入資料！', 'success');
                     } else {
                         throw new Error('資料格式錯誤');
@@ -1444,6 +1644,7 @@
                     
                 } catch (error) {
                     console.error('載入失敗:', error);
+                    this.updateSyncStatus(false);
                     this.showToast('載入失敗，請確認試算表內容', 'error');
                 } finally {
                     downloadBtn.innerHTML = originalHTML;
@@ -1491,7 +1692,12 @@
                 
                 const sortedDates = Object.keys(this.schedules).sort();
                 sortedDates.forEach(date => {
-                    this.schedules[date].forEach(schedule => {
+                    // 按時間排序每天的排班
+                    const sortedSchedules = [...this.schedules[date]].sort((a, b) => {
+                        return this.timeToMinutes(a.startTime) - this.timeToMinutes(b.startTime);
+                    });
+                    
+                    sortedSchedules.forEach(schedule => {
                         const employee = this.employees.find(e => e.id === schedule.employeeId);
                         data.push([
                             date,
@@ -1557,13 +1763,39 @@
                             employeeId: parseInt(row[1]),
                             startTime: row[3],
                             endTime: row[4],
-                                 notes: row[5] || ''
+                            notes: row[5] || ''
                         });
                     }
                 }
                 
                 if (this.shifts.length === 0) {
                     this.initDefaultShifts();
+                }
+            },
+
+            updateSyncStatus(connected) {
+                this.isConnected = connected;
+                const statusEl = document.getElementById('syncStatus');
+                const statusText = document.getElementById('syncStatusText');
+                const lastSyncEl = document.getElementById('lastSyncTime');
+                
+                if (connected) {
+                    statusEl.classList.add('connected');
+                    statusText.textContent = '已連線';
+                    this.lastSyncTime = new Date();
+                    lastSyncEl.textContent = this.lastSyncTime.toLocaleString('zh-TW');
+                    localStorage.setItem('lastSync', this.lastSyncTime.toISOString());
+                } else {
+                    statusEl.classList.remove('connected');
+                    statusText.textContent = '未連線';
+                }
+            },
+
+            loadSyncStatus() {
+                const lastSync = localStorage.getItem('lastSync');
+                if (lastSync) {
+                    this.lastSyncTime = new Date(lastSync);
+                    document.getElementById('lastSyncTime').textContent = this.lastSyncTime.toLocaleString('zh-TW');
                 }
             },
 
@@ -1677,6 +1909,11 @@
                     modal.classList.remove('show');
                 }
             });
+        });
+
+        // 防止拖曳面板時選取文字
+        document.getElementById('panelHeader').addEventListener('selectstart', (e) => {
+            e.preventDefault();
         });
     </script>
 </body>

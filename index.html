@@ -879,7 +879,7 @@
             currentMonth: new Date(),
             editingEmployee: null,
             currentDate: null,
-            scriptUrl: 'https://script.google.com/macros/s/AKfycbxBCtXs8OKyhEUOeHjFDFe_au1FrG3iPfMRaPLm5lEHDsCXmJIjQebzpk8OJG9--Q_3nA/exec',
+            scriptUrl: 'scriptUrl: 'https://script.google.com/macros/s/AKfycbxBCtXs8OKyhEUOeHjFDFe_au1FrG3iPfMRaPLm5lEHDsCXmJIjQebzpk8OJG9--Q_3nA/exec',
             isConnected: false,
             lastSyncTime: null,
 
@@ -1463,11 +1463,12 @@
                 try {
                     const sheetData = this.prepareSheetData();
                     
-                    const response = await fetch(this.scriptUrl, {
+                    // 使用 fetch 但不期待回應（避免 CORS）
+                    fetch(this.scriptUrl, {
                         method: 'POST',
-                        mode: 'no-cors',
+                        mode: 'no-cors', // 重要：避免 CORS 錯誤
                         headers: {
-                            'Content-Type': 'text/plain;charset=utf-8',
+                            'Content-Type': 'text/plain',
                         },
                         body: JSON.stringify({
                             data: sheetData,
@@ -1475,13 +1476,17 @@
                         })
                     });
                     
+                    // 因為 no-cors 模式無法讀取回應，我們假設成功
+                    // 等待一小段時間確保請求已發送
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
                     this.updateSyncStatus(true);
-                    this.showToast('資料已成功上傳到 Google Sheets！', 'success');
+                    this.showToast('資料已上傳到 Google Sheets（請稍後在試算表確認）', 'success');
                     
                 } catch (error) {
                     console.error('上傳錯誤:', error);
                     this.updateSyncStatus(false);
-                    this.showToast('上傳失敗，請檢查網路連線', 'error');
+                    this.showToast('上傳過程發生錯誤', 'error');
                 } finally {
                     uploadBtn.innerHTML = originalHTML;
                     uploadBtn.disabled = false;
@@ -1495,29 +1500,61 @@
                 downloadBtn.disabled = true;
                 
                 try {
-                    const response = await fetch(this.scriptUrl + '?sheet=data');
+                    // 載入可以使用一般的 fetch
+                    const response = await fetch(this.scriptUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error('網路回應不正常');
+                    }
+                    
                     const result = await response.json();
                     
-                    if (result.success && result.data) {
+                    if (result.success && result.data && result.data.length > 0) {
                         this.parseSheetData(result.data);
                         this.saveData();
                         this.renderAll();
                         this.updateSyncStatus(true);
-                        this.showToast('已從 Google Sheets 載入資料！', 'success');
+                        this.showToast('已成功從 Google Sheets 載入資料！', 'success');
                     } else {
-                        throw new Error('資料格式錯誤');
+                        this.showToast('試算表中沒有資料', 'warning');
                     }
                     
                 } catch (error) {
                     console.error('載入失敗:', error);
                     this.updateSyncStatus(false);
-                    this.showToast('載入失敗，請確認試算表內容', 'error');
+                    
+                    // 提供更詳細的錯誤訊息
+                    if (error.message.includes('Failed to fetch')) {
+                        this.showToast('無法連接到 Google Sheets，請檢查網路', 'error');
+                    } else {
+                        this.showToast('載入失敗：' + error.message, 'error');
+                    }
                 } finally {
                     downloadBtn.innerHTML = originalHTML;
                     downloadBtn.disabled = false;
                 }
             },
 
+            // 新增測試連線功能
+            async testConnection() {
+                try {
+                    const response = await fetch(this.scriptUrl);
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.showToast('Google Sheets 連線正常', 'success');
+                            this.updateSyncStatus(true);
+                            return true;
+                        }
+                    }
+                } catch (error) {
+                    this.showToast('無法連接到 Google Sheets', 'error');
+                    this.updateSyncStatus(false);
+                    return false;
+                }
+                return false;
+            },
+        
             prepareSheetData() {
                 const data = [];
                 

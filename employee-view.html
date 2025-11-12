@@ -494,30 +494,6 @@
             margin-bottom: 10px;
         }
 
-        /* 返回按鈕 */
-        .back-to-admin {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--bleu-accent);
-            color: white;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 20px rgba(238, 120, 54, 0.3);
-            cursor: pointer;
-            transition: var(--bleu-transition);
-            text-decoration: none;
-        }
-
-        .back-to-admin:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 30px rgba(238, 120, 54, 0.4);
-        }
-
         /* RWD 響應式設計 */
         @media (max-width: 768px) {
             body {
@@ -584,13 +560,6 @@
                 padding: 10px 5px;
                 font-size: 12px;
             }
-
-            .back-to-admin {
-                width: 48px;
-                height: 48px;
-                bottom: 20px;
-                right: 20px;
-            }
         }
 
         @media (max-width: 480px) {
@@ -638,7 +607,6 @@
 
             .employee-header,
             .stats-container,
-            .back-to-admin,
             .view-toggle {
                 display: none;
             }
@@ -774,11 +742,6 @@
             </div>
         </div>
     </div>
-
-    <!-- 返回管理後台按鈕 -->
-    <a href="index.html" class="back-to-admin" title="返回管理後台">
-        <span class="material-icons">settings</span>
-    </a>
 
     <script>
         const EmployeeView = {

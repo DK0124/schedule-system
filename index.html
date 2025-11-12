@@ -900,7 +900,7 @@
     <div class="modal" id="shiftModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>新增自訂時段</h3>
+                <h3 id="shiftModalTitle">新增自訂時段</h3>
                 <button class="btn btn-icon" onclick="App.closeModal('shiftModal')">
                     <span class="material-icons">close</span>
                 </button>
@@ -922,6 +922,7 @@
                 </form>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-accent" onclick="App.deleteEditingShift()" id="deleteShiftBtn" style="display: none;">刪除時段</button>
                 <button class="btn" onclick="App.closeModal('shiftModal')">取消</button>
                 <button class="btn btn-primary" onclick="App.saveShift()">儲存時段</button>
             </div>
@@ -938,6 +939,7 @@
             shifts: [],
             currentMonth: new Date(),
             editingEmployee: null,
+            editingShiftId: null,
             currentDate: null,
             scriptUrl: '',
             isConnected: false,
@@ -1224,9 +1226,14 @@
                                 <div class="text-secondary">${shift.startTime} - ${shift.endTime}</div>
                             </div>
                         </div>
-                        ${shift.id > 3 ? `<button class="btn btn-icon" onclick="App.deleteShift(${shift.id})">
-                            <span class="material-icons">delete</span>
-                        </button>` : ''}
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn btn-icon" onclick="App.editShift(${shift.id})">
+                                <span class="material-icons">edit</span>
+                            </button>
+                            <button class="btn btn-icon" onclick="App.deleteShift(${shift.id})">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
                     `;
                     list.appendChild(item);
                 });
@@ -1452,6 +1459,23 @@
 
             openShiftModal() {
                 document.getElementById('shiftForm').reset();
+                this.editingShiftId = null;
+                document.getElementById('shiftModalTitle').textContent = '新增自訂時段';
+                document.getElementById('deleteShiftBtn').style.display = 'none';
+                document.getElementById('shiftModal').classList.add('show');
+            },
+
+            editShift(id) {
+                const shift = this.shifts.find(s => s.id === id);
+                if (!shift) return;
+                
+                document.getElementById('shiftName').value = shift.name;
+                document.getElementById('shiftStartTime').value = shift.startTime;
+                document.getElementById('shiftEndTime').value = shift.endTime;
+                
+                this.editingShiftId = id;
+                document.getElementById('shiftModalTitle').textContent = '編輯時段';
+                document.getElementById('deleteShiftBtn').style.display = 'inline-flex';
                 document.getElementById('shiftModal').classList.add('show');
             },
 
@@ -1465,18 +1489,31 @@
                     return;
                 }
                 
-                const newShift = {
-                    id: Date.now(),
-                    name,
-                    startTime,
-                    endTime
-                };
+                if (this.editingShiftId) {
+                    // 編輯模式
+                    const shift = this.shifts.find(s => s.id === this.editingShiftId);
+                    if (shift) {
+                        shift.name = name;
+                        shift.startTime = startTime;
+                        shift.endTime = endTime;
+                        this.showToast('時段已更新', 'success');
+                    }
+                    this.editingShiftId = null;
+                } else {
+                    // 新增模式
+                    const newShift = {
+                        id: Date.now(),
+                        name,
+                        startTime,
+                        endTime
+                    };
+                    this.shifts.push(newShift);
+                    this.showToast('時段已新增', 'success');
+                }
                 
-                this.shifts.push(newShift);
                 this.saveData();
                 this.renderShifts();
                 this.closeModal('shiftModal');
-                this.showToast('時段已新增', 'success');
             },
 
             deleteShift(id) {
@@ -1485,6 +1522,17 @@
                     this.saveData();
                     this.renderShifts();
                     this.showToast('時段已刪除', 'success');
+                }
+            },
+
+            deleteEditingShift() {
+                if (this.editingShiftId && confirm('確定要刪除這個時段嗎？')) {
+                    this.shifts = this.shifts.filter(s => s.id !== this.editingShiftId);
+                    this.saveData();
+                    this.renderShifts();
+                    this.closeModal('shiftModal');
+                    this.showToast('時段已刪除', 'success');
+                    this.editingShiftId = null;
                 }
             },
 
@@ -1560,7 +1608,6 @@
                 this.showToast('CSV 檔案已匯出', 'success');
             },
 
-            // 雲端同步方法（不使用 Base64）
             async syncToSheets() {
                 if (!this.scriptUrl) {
                     this.showToast('請先設定 Script URL', 'error');
@@ -1577,10 +1624,8 @@
                     const dataString = JSON.stringify(sheetData);
                     
                     if (dataString.length < 2000) {
-                        // 小資料：使用 JSONP
                         await this.uploadViaJsonp(sheetData);
                     } else {
-                        // 大資料：使用 POST
                         await this.uploadViaPost(sheetData);
                     }
                     
@@ -1597,7 +1642,6 @@
                 }
             },
 
-            // 使用 JSONP 上傳（適合小資料）
             async uploadViaJsonp(data) {
                 return new Promise((resolve, reject) => {
                     const callbackName = 'uploadCallback_' + Date.now();
@@ -1641,7 +1685,6 @@
                 });
             },
 
-            // 使用 POST 上傳（適合大資料）
             async uploadViaPost(data) {
                 const formData = new FormData();
                 formData.append('data', JSON.stringify(data));
@@ -1653,7 +1696,6 @@
                     body: formData
                 });
                 
-                // no-cors 模式下無法讀取回應，等待確保請求完成
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 return { success: true };
             },
@@ -1764,67 +1806,66 @@
             },
 
             parseSheetData(data) {
-				this.employees = [];
-				this.shifts = [];
-				this.schedules = {};
-				
-				let section = '';
-				for (let i = 0; i < data.length; i++) {
-					const row = data[i];
-					if (!row || row.length === 0) continue;
-					
-					// 處理可能有單引號的情況
-					const firstCell = row[0] ? row[0].toString().replace(/^'/, '') : '';
-					
-					if (firstCell === '=== 員工資料 ===') {
-						section = 'employees';
-						i++;
-						continue;
-					} else if (firstCell === '=== 班次設定 ===') {
-						section = 'shifts';
-						i++;
-						continue;
-					} else if (firstCell === '=== 排班資料 ===') {
-						section = 'schedules';
-						i++;
-						continue;
-					}
-					
-					if (section === 'employees' && row[0] && row[0] !== 'ID') {
-						this.employees.push({
-							id: parseInt(row[0]) || Date.now() + Math.random(),
-							name: row[1] || '',
-							avatarText: row[2] || '',
-							type: row[3] === '正職' ? 'fulltime' : 'parttime',
-							phone: row[4] || '',
-							email: row[5] || ''
-						});
-					} else if (section === 'shifts' && row[0] && row[0] !== 'ID') {
-						this.shifts.push({
-							id: parseInt(row[0]) || Date.now() + Math.random(),
-							name: row[1] || '',
-							startTime: row[2] || '',
-							endTime: row[3] || ''
-						});
-					} else if (section === 'schedules' && row[0] && row[0] !== '日期') {
-						const date = row[0];
-						if (!this.schedules[date]) {
-							this.schedules[date] = [];
-						}
-						
-						this.schedules[date].push({
-							employeeId: parseInt(row[1]),
-							startTime: row[3] || '',
-							endTime: row[4] || '',
-							notes: row[5] || ''
-						});
-					}
-				}
-				
-				if (this.shifts.length === 0) {
-					this.initDefaultShifts();
-				}
-			},
+                this.employees = [];
+                this.shifts = [];
+                this.schedules = {};
+                
+                let section = '';
+                for (let i = 0; i < data.length; i++) {
+                    const row = data[i];
+                    if (!row || row.length === 0) continue;
+                    
+                    const firstCell = row[0] ? row[0].toString().replace(/^'/, '') : '';
+                    
+                    if (firstCell === '=== 員工資料 ===') {
+                        section = 'employees';
+                        i++;
+                        continue;
+                    } else if (firstCell === '=== 班次設定 ===') {
+                        section = 'shifts';
+                        i++;
+                        continue;
+                    } else if (firstCell === '=== 排班資料 ===') {
+                        section = 'schedules';
+                        i++;
+                        continue;
+                    }
+                    
+                    if (section === 'employees' && row[0] && row[0] !== 'ID') {
+                        this.employees.push({
+                            id: parseInt(row[0]) || Date.now() + Math.random(),
+                            name: row[1] || '',
+                            avatarText: row[2] || '',
+                            type: row[3] === '正職' ? 'fulltime' : 'parttime',
+                            phone: row[4] || '',
+                            email: row[5] || ''
+                        });
+                    } else if (section === 'shifts' && row[0] && row[0] !== 'ID') {
+                        this.shifts.push({
+                            id: parseInt(row[0]) || Date.now() + Math.random(),
+                            name: row[1] || '',
+                            startTime: row[2] || '',
+                            endTime: row[3] || ''
+                        });
+                    } else if (section === 'schedules' && row[0] && row[0] !== '日期') {
+                        const date = row[0];
+                        if (!this.schedules[date]) {
+                            this.schedules[date] = [];
+                        }
+                        
+                        this.schedules[date].push({
+                            employeeId: parseInt(row[1]),
+                            startTime: row[3] || '',
+                            endTime: row[4] || '',
+                            notes: row[5] || ''
+                        });
+                    }
+                }
+                
+                if (this.shifts.length === 0) {
+                    this.initDefaultShifts();
+                }
+            },
 
             updateSyncStatus(connected) {
                 this.isConnected = connected;
@@ -1858,7 +1899,6 @@
                 this.schedules = data.schedules || {};
                 this.shifts = data.shifts || [];
                 
-                // 如果沒有資料，建立預設資料
                 if (this.employees.length === 0) {
                     this.employees = [
                         { 
@@ -1903,8 +1943,9 @@
             initDefaultShifts() {
                 if (this.shifts.length === 0) {
                     this.shifts = [
-                        { id: 1, name: '早班', startTime: '11:00', endTime: '18:00' },
-                        { id: 2, name: '晚班', startTime: '17:00', endTime: '22:00' }
+                        { id: 1, name: '早班', startTime: '08:00', endTime: '16:00' },
+                        { id: 2, name: '午班', startTime: '16:00', endTime: '00:00' },
+                        { id: 3, name: '晚班', startTime: '00:00', endTime: '08:00' }
                     ];
                     this.saveData();
                 }

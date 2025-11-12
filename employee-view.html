@@ -1723,7 +1723,8 @@
                 
                 let csv = '\ufeff';  // BOM for UTF-8
                 csv += `${employee.name} - ${year}年${month}月班表\n\n`;
-                csv += '日期,星期,上班時間,下班時間,時數,班別,搭班員工,備註\n
+                csv += '日期,星期,上班時間,下班時間,時數,班別,搭班員工,備註\n';
+                
                 const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
                 const monthKey = `${year}-${String(month).padStart(2, '0')}`;
                 

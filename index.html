@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Bleu 班表系統 - 現代化的排班解決方案">
     <meta name="author" content="DK0124">
-    <title>Bleu 班表系統</title>
+    <title>Bleu 班表系統 - 管理後台</title>
     
     <!-- Google Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -31,6 +31,13 @@
             --bleu-shadow-hover: 0 6px 25px rgba(0, 61, 82, 0.1);
             --bleu-radius: 12px;
             --bleu-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* 圖示大小變數 */
+            --avatar-size-small: 20px;
+            --avatar-size-normal: 24px;
+            --avatar-size-large: 28px;
+            --avatar-size-xlarge: 32px;
+            --avatar-current-size: var(--avatar-size-normal);
         }
 
         * { 
@@ -284,18 +291,19 @@
         }
         
         .employee-avatar-badge {
-            width: 24px; 
-            height: 24px; 
+            width: var(--avatar-current-size);
+            height: var(--avatar-current-size);
             border-radius: 50%;
             display: flex; 
             align-items: center; 
             justify-content: center;
-            font-size: 11px; 
+            font-size: calc(var(--avatar-current-size) * 0.45);
             font-weight: 600; 
             color: white;
             transition: var(--bleu-transition); 
             border: 2px solid var(--bleu-white);
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
         
         .employee-avatar-badge:hover {
@@ -422,6 +430,60 @@
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             margin-top: 10px;
+        }
+        
+        /* 大小控制器樣式 */
+        .size-controller {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bleu-gray-light);
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .size-controller label {
+            font-size: 12px;
+            color: var(--bleu-primary);
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .size-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--bleu-gray);
+            outline: none;
+        }
+
+        .size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--bleu-primary);
+            cursor: pointer;
+        }
+
+        .size-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--bleu-primary);
+            cursor: pointer;
+        }
+
+        .size-display {
+            min-width: 45px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--bleu-secondary);
+            font-weight: 600;
         }
 
         .item-list { 
@@ -707,34 +769,254 @@
             to { transform: rotate(360deg); }
         }
 
+        /* RWD 響應式設計 */
         @media (max-width: 768px) {
-            .floating-panel { 
-                width: calc(100% - 40px); 
-                top: 10px; 
-                right: 20px; 
-                max-height: 60vh; 
+            .app { 
+                padding: 10px; 
             }
-            .calendar-container { 
-                padding: 15px; 
+            
+            .page-title {
+                gap: 10px;
+                margin-bottom: 15px;
             }
-            .calendar-grid { 
-                gap: 2px; 
-            }
-            .calendar-cell { 
-                min-height: 80px; 
-            }
+            
             .page-title h1 { 
-                font-size: 22px; 
+                font-size: 20px; 
             }
-            .btn { 
-                padding: 8px 12px; 
-                font-size: 13px; 
+            
+            .page-title .material-icons { 
+                font-size: 24px; 
             }
+            
+            .calendar-container { 
+                padding: 10px; 
+                border-radius: 8px;
+            }
+            
+            .calendar-header {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+            }
+            
+            .calendar-nav {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .calendar-actions {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .calendar-title { 
+                font-size: 18px; 
+            }
+            
+            .calendar-cell { 
+                min-height: 70px;
+                padding: 4px;
+            }
+            
+            .date-number {
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+            
+            .weekday-header {
+                font-size: 11px;
+                padding: 8px 0;
+            }
+            
             .time-label {
                 display: none;
             }
+            
+            .schedule-time-group {
+                gap: 2px;
+                margin-bottom: 2px;
+            }
+            
+            :root {
+                --avatar-current-size: var(--avatar-size-small);
+            }
+            
+            .btn { 
+                padding: 6px 10px; 
+                font-size: 12px; 
+            }
+            
+            .btn .material-icons,
+            .btn .material-icons-outlined {
+                font-size: 16px;
+                margin-right: 4px;
+            }
+            
+            .floating-panel { 
+                width: calc(100% - 20px); 
+                top: 10px; 
+                right: 10px;
+                left: 10px;
+                max-height: 85vh; 
+            }
+            
+            .panel-content {
+                padding: 15px;
+            }
+            
+            .panel-section {
+                margin-bottom: 20px;
+            }
+            
+            .panel-section h3 {
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+            
             .sync-buttons {
                 grid-template-columns: 1fr;
+                gap: 6px;
+            }
+            
+            .modal {
+                padding: 10px;
+            }
+            
+            .modal-content {
+                max-width: 100%;
+                max-height: 95vh;
+            }
+            
+            .modal-header {
+                padding: 15px;
+            }
+            
+            .modal-body {
+                padding: 15px;
+            }
+            
+            .modal-footer {
+                padding: 15px;
+                flex-wrap: wrap;
+            }
+            
+            .form-group {
+                margin-bottom: 15px;
+            }
+            
+            .form-label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+            
+            .form-control {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+            
+            .quick-settings {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+            }
+            
+            .preset-shift {
+                padding: 8px;
+                font-size: 11px;
+            }
+            
+            .employee-select-list {
+                max-height: 150px;
+                padding: 6px;
+            }
+            
+            .employee-checkbox {
+                padding: 8px;
+                margin-bottom: 4px;
+            }
+            
+            .employee-checkbox label {
+                font-size: 13px;
+            }
+            
+            .scheduled-list {
+                margin-top: 15px;
+                padding: 10px;
+            }
+            
+            .scheduled-item {
+                padding: 8px;
+                margin-bottom: 6px;
+                font-size: 12px;
+            }
+            
+            .toast {
+                bottom: 10px;
+                padding: 10px 16px;
+                font-size: 13px;
+                max-width: calc(100% - 40px);
+            }
+            
+            .list-item {
+                padding: 10px;
+            }
+            
+            .avatar-initial {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
+            }
+            
+            .text-primary {
+                font-size: 13px;
+            }
+            
+            .text-secondary {
+                font-size: 11px;
+            }
+        }
+
+        /* 小手機優化 */
+        @media (max-width: 374px) {
+            .calendar-cell {
+                min-height: 60px;
+                padding: 2px;
+            }
+            
+            .date-number {
+                font-size: 11px;
+            }
+            
+            .weekday-header {
+                font-size: 10px;
+            }
+            
+            :root {
+                --avatar-current-size: 18px;
+            }
+            
+            .page-title h1 {
+                font-size: 18px;
+            }
+            
+            .btn {
+                padding: 5px 8px;
+                font-size: 11px;
+            }
+        }
+
+        /* 平板優化 */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .calendar-cell {
+                min-height: 100px;
+            }
+            
+            .floating-panel {
+                width: 380px;
+            }
+            
+            .sync-buttons {
+                grid-template-columns: 1fr 1fr;
             }
         }
     </style>
@@ -744,7 +1026,7 @@
     <div class="app">
         <div class="page-title">
             <span class="material-icons">event_note</span>
-            <h1>Bleu 班表系統</h1>
+            <h1>Bleu 班表系統 - 管理後台</h1>
         </div>
         <div class="calendar-container">
             <div class="calendar-header">
@@ -766,6 +1048,10 @@
                         <span class="material-icons-outlined">download</span>
                         匯出 CSV
                     </button>
+                    <a href="employee-view.html" class="btn btn-info" style="text-decoration: none;">
+                        <span class="material-icons-outlined">visibility</span>
+                        員工檢視
+                    </a>
                 </div>
             </div>
             <div id="calendarHeader" class="calendar-grid"></div>
@@ -784,10 +1070,10 @@
             </button>
         </div>
         <div class="panel-content">
+            <!-- Google Sheets 同步區塊 -->
             <div class="panel-section">
                 <h3><span class="material-icons-outlined">cloud_sync</span>Google Sheets 雲端同步</h3>
                 
-                <!-- Script URL 輸入區域 -->
                 <div class="url-input-group">
                     <label for="scriptUrlInput">Apps Script 網址：</label>
                     <input type="text" id="scriptUrlInput" placeholder="輸入您的 Script URL..." />
@@ -840,6 +1126,28 @@
                 </div>
             </div>
             
+            <!-- 顯示設定區塊 -->
+            <div class="panel-section">
+                <h3><span class="material-icons-outlined">photo_size_select_large</span>顯示設定</h3>
+                
+                <div class="size-controller">
+                    <label for="avatarSizeSlider">圖示大小：</label>
+                    <input type="range" id="avatarSizeSlider" class="size-slider" 
+                           min="18" max="32" value="24" step="2"
+                           oninput="App.updateAvatarSize(this.value)">
+                    <span class="size-display" id="sizeDisplay">24px</span>
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                        <input type="checkbox" id="autoSizeMobile" checked 
+                               onchange="App.toggleAutoSizeMobile(this.checked)">
+                        <span>手機自動調整大小</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 班次管理區塊 -->
             <div class="panel-section">
                 <h3><span class="material-icons-outlined">schedule</span>班次時段管理</h3>
                 <div class="item-list" id="shiftList"></div>
@@ -849,6 +1157,7 @@
                 </button>
             </div>
             
+            <!-- 員工管理區塊 -->
             <div class="panel-section">
                 <h3><span class="material-icons-outlined">badge</span>員工管理</h3>
                 <div class="item-list" id="employeeList"></div>
@@ -1004,21 +1313,116 @@
             scheduleUpdateTime: null,
             toastTimeout: null,
             
+            // 顯示設定
+            avatarSize: 24,
+            autoSizeMobile: true,
+            isMobile: false,
+            
             // 快取管理
-            cacheVersion: '1.0.0',
+            cacheVersion: '1.1.0',
 
             async init() {
+                this.checkMobile();
                 this.loadScriptUrl();
                 this.loadData();
                 this.initDefaultShifts();
                 this.renderAll();
                 this.setupPanelDrag();
                 this.loadSyncStatus();
-                window.addEventListener('storage', () => this.handleStorageChange());
+                this.loadSizeSettings();
                 
-                // 自動檢查更新（如果有設定 Script URL）
+                window.addEventListener('storage', () => this.handleStorageChange());
+                window.addEventListener('resize', () => this.handleResize());
+                
+                // 自動檢查更新
                 if (this.scriptUrl) {
                     this.checkForUpdates();
+                }
+            },
+
+            // === 顯示設定管理 ===
+            checkMobile() {
+                this.isMobile = window.innerWidth <= 768;
+                
+                if (this.isMobile && this.autoSizeMobile) {
+                    this.applyMobileSize();
+                }
+            },
+            
+            handleResize() {
+                const wasMobile = this.isMobile;
+                this.checkMobile();
+                
+                if (wasMobile !== this.isMobile) {
+                    if (this.isMobile && this.autoSizeMobile) {
+                        this.applyMobileSize();
+                    } else if (!this.isMobile) {
+                        this.restoreDesktopSize();
+                    }
+                }
+            },
+            
+            applyMobileSize() {
+                const mobileSize = window.innerWidth <= 374 ? 18 : 20;
+                document.documentElement.style.setProperty('--avatar-current-size', `${mobileSize}px`);
+            },
+            
+            restoreDesktopSize() {
+                document.documentElement.style.setProperty('--avatar-current-size', `${this.avatarSize}px`);
+                const slider = document.getElementById('avatarSizeSlider');
+                if (slider) {
+                    slider.value = this.avatarSize;
+                    document.getElementById('sizeDisplay').textContent = `${this.avatarSize}px`;
+                }
+            },
+            
+            updateAvatarSize(size) {
+                this.avatarSize = parseInt(size);
+                
+                if (!this.isMobile || !this.autoSizeMobile) {
+                    document.documentElement.style.setProperty('--avatar-current-size', `${size}px`);
+                }
+                
+                document.getElementById('sizeDisplay').textContent = `${size}px`;
+                localStorage.setItem('avatarSize', size);
+            },
+            
+            toggleAutoSizeMobile(enabled) {
+                this.autoSizeMobile = enabled;
+                localStorage.setItem('autoSizeMobile', enabled);
+                
+                if (this.isMobile) {
+                    if (enabled) {
+                        this.applyMobileSize();
+                    } else {
+                        this.restoreDesktopSize();
+                    }
+                }
+            },
+            
+            loadSizeSettings() {
+                const savedSize = localStorage.getItem('avatarSize');
+                const savedAutoMobile = localStorage.getItem('autoSizeMobile');
+                
+                if (savedSize) {
+                    this.avatarSize = parseInt(savedSize);
+                    const slider = document.getElementById('avatarSizeSlider');
+                    if (slider) {
+                        slider.value = this.avatarSize;
+                        document.getElementById('sizeDisplay').textContent = `${this.avatarSize}px`;
+                    }
+                }
+                
+                if (savedAutoMobile !== null) {
+                    this.autoSizeMobile = savedAutoMobile === 'true';
+                    const checkbox = document.getElementById('autoSizeMobile');
+                    if (checkbox) {
+                        checkbox.checked = this.autoSizeMobile;
+                    }
+                }
+                
+                if (!this.isMobile || !this.autoSizeMobile) {
+                    document.documentElement.style.setProperty('--avatar-current-size', `${this.avatarSize}px`);
                 }
             },
 
@@ -1065,10 +1469,9 @@
                             this.showToast('Google Sheets 連線正常', 'success');
                             this.updateSyncStatus(true);
                             
-                            // 顯示雲端狀態
                             const status = result.status;
                             this.showToast(
-                                `雲端狀態：${status.employeesCount} 位員工，${status.shiftsCount} 個班次，${status.schedulesCount} 筆排班`,
+                                `雲端狀態：${status.employeesCount || 0} 位員工，${status.shiftsCount || 0} 個班次，${status.schedulesCount || 0} 筆排班`,
                                 'success'
                             );
                             return true;
@@ -1092,7 +1495,6 @@
                         if (result.success) {
                             const status = result.status;
                             
-                            // 檢查是否有更新
                             const localConfigTime = localStorage.getItem('configUpdateTime');
                             const localScheduleTime = localStorage.getItem('scheduleUpdateTime');
                             
@@ -1112,7 +1514,6 @@
                 }
             },
 
-            // 智能載入 - 自動判斷需要載入的內容
             async smartLoad() {
                 if (!this.scriptUrl) {
                     this.showToast('請先設定 Script URL', 'error');
@@ -1125,7 +1526,6 @@
                 downloadBtn.disabled = true;
                 
                 try {
-                    // Step 1: 取得雲端狀態
                     const statusResponse = await fetch(`${this.scriptUrl}?action=getStatus`);
                     const statusResult = await statusResponse.json();
                     
@@ -1142,13 +1542,11 @@
                     let scheduleNeedsUpdate = !localScheduleTime || 
                         (status.schedulesLastModified && new Date(status.schedulesLastModified) > new Date(localScheduleTime));
                     
-                    // Step 2: 載入設定（如果需要）
                     if (configNeedsUpdate) {
                         downloadBtn.innerHTML = '<span class="loading"></span> 載入設定...';
                         await this.loadConfigOnly(false);
                     }
                     
-                    // Step 3: 載入排班（如果需要）
                     if (scheduleNeedsUpdate) {
                         downloadBtn.innerHTML = '<span class="loading"></span> 載入排班...';
                         await this.loadSchedulesOnly(false);
@@ -1174,7 +1572,6 @@
                 }
             },
 
-            // 只載入設定檔（員工和班次）
             async loadConfigOnly(showMessage = true) {
                 if (!this.scriptUrl) {
                     if (showMessage) this.showToast('請先設定 Script URL', 'error');
@@ -1200,7 +1597,6 @@
                             this.initDefaultShifts();
                         }
                         
-                        // 更新設定時間戳
                         this.configUpdateTime = result.lastModified || new Date().toISOString();
                         localStorage.setItem('configUpdateTime', this.configUpdateTime);
                         
@@ -1223,7 +1619,6 @@
                 }
             },
 
-            // 只載入排班資料
             async loadSchedulesOnly(showMessage = true) {
                 if (!this.scriptUrl) {
                     if (showMessage) this.showToast('請先設定 Script URL', 'error');
@@ -1237,7 +1632,6 @@
                     if (result.success && result.data) {
                         this.schedules = result.data;
                         
-                        // 更新排班時間戳
                         this.scheduleUpdateTime = result.lastModified || new Date().toISOString();
                         localStorage.setItem('scheduleUpdateTime', this.scheduleUpdateTime);
                         
@@ -1256,7 +1650,6 @@
                 }
             },
 
-            // 只同步排班資料
             async syncSchedulesOnly() {
                 if (!this.scriptUrl) {
                     this.showToast('請先設定 Script URL', 'error');
@@ -1271,7 +1664,6 @@
                 try {
                     const schedulesWithNames = {};
                     
-                    // 為每個排班加入員工姓名
                     Object.keys(this.schedules).forEach(date => {
                         schedulesWithNames[date] = this.schedules[date].map(s => ({
                             ...s,
@@ -1279,14 +1671,11 @@
                         }));
                     });
                     
-                    // 使用 JSONP 或 POST 根據資料大小
                     const dataString = JSON.stringify(schedulesWithNames);
                     
                     if (dataString.length < 2000) {
-                        // 小資料用 JSONP
                         await this.uploadSchedulesViaJsonp(schedulesWithNames);
                     } else {
-                        // 大資料用 POST
                         const response = await fetch(this.scriptUrl, {
                             method: 'POST',
                             headers: {
@@ -1302,7 +1691,6 @@
                         await new Promise(resolve => setTimeout(resolve, 2000));
                     }
                     
-                    // 更新本地時間戳
                     this.scheduleUpdateTime = new Date().toISOString();
                     localStorage.setItem('scheduleUpdateTime', this.scheduleUpdateTime);
                     
@@ -1317,7 +1705,6 @@
                 }
             },
 
-            // JSONP 上傳排班
             async uploadSchedulesViaJsonp(schedules) {
                 return new Promise((resolve, reject) => {
                     const callbackName = 'scheduleCallback_' + Date.now();
@@ -1361,7 +1748,6 @@
                 });
             },
 
-            // 完整同步到 Sheets
             async syncToSheets() {
                 if (!this.scriptUrl) {
                     this.showToast('請先設定 Script URL', 'error');
@@ -1383,7 +1769,6 @@
                         await this.uploadViaPost(sheetData);
                     }
                     
-                    // 更新所有時間戳
                     const now = new Date().toISOString();
                     this.lastSyncTime = now;
                     this.configUpdateTime = now;
@@ -1589,7 +1974,6 @@
 
             // === 本地儲存管理 ===
             saveData() {
-                // 分離儲存不同類型的資料
                 const config = {
                     employees: this.employees,
                     shifts: this.shifts,
@@ -1597,11 +1981,8 @@
                     lastUpdated: new Date().toISOString()
                 };
                 localStorage.setItem('bleuConfig', JSON.stringify(config));
-                
-                // 儲存排班
                 localStorage.setItem('bleuSchedules', JSON.stringify(this.schedules));
                 
-                // 相容舊版本
                 const fullData = {
                     employees: this.employees,
                     schedules: this.schedules,
@@ -1609,10 +1990,10 @@
                     lastUpdated: new Date().toISOString()
                 };
                 localStorage.setItem('bleuScheduleData', JSON.stringify(fullData));
+                localStorage.setItem('lastLocalUpdate', new Date().toISOString());
             },
 
             loadData() {
-                // 優先載入分離的資料
                 const config = localStorage.getItem('bleuConfig');
                 const schedules = localStorage.getItem('bleuSchedules');
                 
@@ -1626,7 +2007,6 @@
                     this.schedules = JSON.parse(schedules);
                 }
                 
-                // 如果沒有分離的資料，載入舊格式
                 if (!config && !schedules) {
                     const data = JSON.parse(localStorage.getItem('bleuScheduleData') || '{}');
                     this.employees = data.employees || [];
@@ -1634,7 +2014,6 @@
                     this.shifts = data.shifts || [];
                 }
                 
-                // 初始化預設資料
                 if (this.employees.length === 0) {
                     this.initDefaultData();
                 }
@@ -1699,7 +2078,6 @@
                     statusText.textContent = '未連線';
                 }
                 
-                // 更新時間顯示
                 if (this.lastSyncTime) {
                     document.getElementById('lastSyncTime').textContent = 
                         new Date(this.lastSyncTime).toLocaleString('zh-TW');
@@ -2347,63 +2725,6 @@
                 this.showToast('CSV 檔案已匯出', 'success');
             },
 
-            // === 舊版相容功能（完整載入） ===
-            async loadFromSheets() {
-                if (!this.scriptUrl) {
-                    this.showToast('請先設定 Script URL', 'error');
-                    return;
-                }
-                
-                const downloadBtn = document.getElementById('downloadBtn');
-                const originalHTML = downloadBtn.innerHTML;
-                downloadBtn.innerHTML = '<span class="loading"></span> 載入中...';
-                downloadBtn.disabled = true;
-                
-                try {
-                    const response = await fetch(`${this.scriptUrl}?action=loadAll`);
-                    
-                    if (!response.ok) {
-                        throw new Error('網路回應不正常');
-                    }
-                    
-                    const result = await response.json();
-                    
-                    if (result.success && result.data && result.data.length > 0) {
-                        this.parseSheetData(result.data);
-                        this.saveData();
-                        this.renderAll();
-                        
-                        // 更新所有時間戳
-                        const now = new Date().toISOString();
-                        this.lastSyncTime = now;
-                        this.configUpdateTime = now;
-                        this.scheduleUpdateTime = now;
-                        
-                        localStorage.setItem('lastSync', now);
-                        localStorage.setItem('configUpdateTime', now);
-                        localStorage.setItem('scheduleUpdateTime', now);
-                        
-                        this.updateSyncStatus(true);
-                        this.showToast('已成功從 Google Sheets 載入完整資料！', 'success');
-                    } else {
-                        this.showToast('試算表中沒有資料', 'warning');
-                    }
-                    
-                } catch (error) {
-                    console.error('載入失敗:', error);
-                    this.updateSyncStatus(false);
-                    
-                    if (error.message.includes('Failed to fetch')) {
-                        this.showToast('無法連接到 Google Sheets，請檢查網路', 'error');
-                    } else {
-                        this.showToast('載入失敗：' + error.message, 'error');
-                    }
-                } finally {
-                    downloadBtn.innerHTML = originalHTML;
-                    downloadBtn.disabled = false;
-                }
-            },
-
             // === UI 通知 ===
             showToast(message, type = 'success') {
                 const toast = document.getElementById('toast');
@@ -2464,9 +2785,7 @@
         });
 
         // 自動儲存提醒
-        let autoSaveTimer;
         window.addEventListener('beforeunload', (e) => {
-            // 檢查是否有未同步的變更
             const lastLocalUpdate = new Date(localStorage.getItem('lastLocalUpdate') || 0);
             const lastCloudSync = new Date(localStorage.getItem('lastSync') || 0);
             

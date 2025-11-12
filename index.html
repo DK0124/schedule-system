@@ -811,7 +811,7 @@
     <div class="modal" id="employeeModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>'=== 員工資料 ===</h3>
+                <h3>員工資料</h3>
                 <button class="btn btn-icon" onclick="App.closeModal('employeeModal')">
                     <span class="material-icons">close</span>
                 </button>
@@ -1265,7 +1265,7 @@
 
                 if (this.editingEmployee) {
                     Object.assign(this.editingEmployee, employeeData);
-                    this.showToast(''=== 員工資料 ===已更新', 'success');
+                    this.showToast('員工資料已更新', 'success');
                 } else {
                     employeeData.id = Date.now();
                     this.employees.push(employeeData);
@@ -1710,7 +1710,7 @@
                 data.push(['匯出時間', new Date().toLocaleString('zh-TW')]);
                 data.push([]);
                 
-                data.push([''=== 員工資料 ===']);
+                data.push(["'=== 員工資料 ==="]);
                 data.push(['ID', '姓名', '頭像文字', '類型', '電話', 'Email']);
                 this.employees.forEach(emp => {
                     data.push([
@@ -1725,7 +1725,7 @@
                 
                 data.push([]);
                 
-                data.push([''=== 班次設定 ===']);
+                data.push(["'=== 班次設定 ==="]);
                 data.push(['ID', '名稱', '開始時間', '結束時間']);
                 this.shifts.forEach(shift => {
                     data.push([
@@ -1738,7 +1738,7 @@
                 
                 data.push([]);
                 
-                data.push([''=== 排班資料 ===']);
+                data.push(["'=== 排班資料 ==="]);
                 data.push(['日期', '員工ID', '員工姓名', '開始時間', '結束時間', '備註']);
                 
                 const sortedDates = Object.keys(this.schedules).sort();
@@ -1764,64 +1764,67 @@
             },
 
             parseSheetData(data) {
-                this.employees = [];
-                this.shifts = [];
-                this.schedules = {};
-                
-                let section = '';
-                for (let i = 0; i < data.length; i++) {
-                    const row = data[i];
-                    if (!row || row.length === 0) continue;
-                    
-                    if (row[0] === ''=== 員工資料 ===') {
-                        section = 'employees';
-                        i++;
-                        continue;
-                    } else if (row[0] === ''=== 班次設定 ===') {
-                        section = 'shifts';
-                        i++;
-                        continue;
-                    } else if (row[0] === ''=== 排班資料 ===') {
-                        section = 'schedules';
-                        i++;
-                        continue;
-                    }
-                    
-                    if (section === 'employees' && row[0] && row[0] !== 'ID') {
-                        this.employees.push({
-                            id: parseInt(row[0]) || Date.now() + Math.random(),
-                            name: row[1] || '',
-                            avatarText: row[2] || '',
-                            type: row[3] === '正職' ? 'fulltime' : 'parttime',
-                            phone: row[4] || '',
-                            email: row[5] || ''
-                        });
-                    } else if (section === 'shifts' && row[0] && row[0] !== 'ID') {
-                        this.shifts.push({
-                            id: parseInt(row[0]) || Date.now() + Math.random(),
-                            name: row[1] || '',
-                            startTime: row[2] || '',
-                            endTime: row[3] || ''
-                        });
-                    } else if (section === 'schedules' && row[0] && row[0] !== '日期') {
-                        const date = row[0];
-                        if (!this.schedules[date]) {
-                            this.schedules[date] = [];
-                        }
-                        
-                        this.schedules[date].push({
-                            employeeId: parseInt(row[1]),
-                            startTime: row[3] || '',
-                            endTime: row[4] || '',
-                            notes: row[5] || ''
-                        });
-                    }
-                }
-                
-                if (this.shifts.length === 0) {
-                    this.initDefaultShifts();
-                }
-            },
+				this.employees = [];
+				this.shifts = [];
+				this.schedules = {};
+				
+				let section = '';
+				for (let i = 0; i < data.length; i++) {
+					const row = data[i];
+					if (!row || row.length === 0) continue;
+					
+					// 處理可能有單引號的情況
+					const firstCell = row[0] ? row[0].toString().replace(/^'/, '') : '';
+					
+					if (firstCell === '=== 員工資料 ===') {
+						section = 'employees';
+						i++;
+						continue;
+					} else if (firstCell === '=== 班次設定 ===') {
+						section = 'shifts';
+						i++;
+						continue;
+					} else if (firstCell === '=== 排班資料 ===') {
+						section = 'schedules';
+						i++;
+						continue;
+					}
+					
+					if (section === 'employees' && row[0] && row[0] !== 'ID') {
+						this.employees.push({
+							id: parseInt(row[0]) || Date.now() + Math.random(),
+							name: row[1] || '',
+							avatarText: row[2] || '',
+							type: row[3] === '正職' ? 'fulltime' : 'parttime',
+							phone: row[4] || '',
+							email: row[5] || ''
+						});
+					} else if (section === 'shifts' && row[0] && row[0] !== 'ID') {
+						this.shifts.push({
+							id: parseInt(row[0]) || Date.now() + Math.random(),
+							name: row[1] || '',
+							startTime: row[2] || '',
+							endTime: row[3] || ''
+						});
+					} else if (section === 'schedules' && row[0] && row[0] !== '日期') {
+						const date = row[0];
+						if (!this.schedules[date]) {
+							this.schedules[date] = [];
+						}
+						
+						this.schedules[date].push({
+							employeeId: parseInt(row[1]),
+							startTime: row[3] || '',
+							endTime: row[4] || '',
+							notes: row[5] || ''
+						});
+					}
+				}
+				
+				if (this.shifts.length === 0) {
+					this.initDefaultShifts();
+				}
+			},
 
             updateSyncStatus(connected) {
                 this.isConnected = connected;

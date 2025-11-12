@@ -1379,7 +1379,507 @@
     <!-- 通知 -->
     <div class="toast" id="toast"></div>
 
-            // === 班次管理（即時寫入） ===
+    <script>
+        const App = {
+            // 資料屬性
+            employees: [],
+            schedules: {},
+            shifts: [],
+            currentMonth: new Date(),
+            editingEmployee: null,
+            editingShiftId: null,
+            currentDate: null,
+            scriptUrl: '',
+            
+            // 即時同步相關
+            realTimeMode: false,
+            autoSyncInterval: null,
+            lastDataHash: null,
+            isSyncing: false,
+            syncFailCount: 0,
+            
+            // 同步狀態
+            isConnected: false,
+            lastSyncTime: null,
+            toastTimeout: null,
+            
+            // 顯示設定
+            avatarSize: 24,
+            autoSizeMobile: true,
+            isMobile: false,
+            
+            // 快取管理
+            cacheVersion: '2.0.0',
+
+            async init() {
+                this.checkMobile();
+                this.loadScriptUrl();
+                this.loadSizeSettings();
+                
+                // 如果有 Script URL，先從雲端載入資料
+                if (this.scriptUrl) {
+                    await this.loadFromCloud();
+                } else {
+                    // 否則載入本地資料
+                    this.loadLocalData();
+                }
+                
+                this.renderAll();
+                this.setupPanelDrag();
+                this.loadSyncStatus();
+                
+                window.addEventListener('storage', () => this.handleStorageChange());
+                window.addEventListener('resize', () => this.handleResize());
+                
+                // 自動啟用即時同步（如果有設定 URL）
+                if (this.scriptUrl) {
+                    this.enableRealTimeMode();
+                }
+            },
+
+            // === 即時同步功能 ===
+            enableRealTimeMode() {
+                if (!this.scriptUrl) {
+                    this.showToast('請先設定 Script URL', 'error');
+                    return;
+                }
+                
+                this.realTimeMode = true;
+                
+                // 更新 UI
+                const toggle = document.getElementById('realtimeToggle');
+                toggle.classList.add('active');
+                document.getElementById('autoSyncStatus').textContent = '已啟用';
+                
+                // 啟動自動同步（每5秒）
+                this.startAutoSync();
+                
+                // 立即同步一次
+                this.syncWithSheets();
+                
+                this.showToast('即時同步已啟用', 'success');
+            },
+
+            disableRealTimeMode() {
+                this.realTimeMode = false;
+                
+                // 更新 UI
+                const toggle = document.getElementById('realtimeToggle');
+                toggle.classList.remove('active');
+                document.getElementById('autoSyncStatus').textContent = '已停用';
+                
+                // 停止自動同步
+                this.stopAutoSync();
+                
+                this.showToast('即時同步已停用', 'warning');
+            },
+
+            toggleRealtimeMode() {
+                if (this.realTimeMode) {
+                    this.disableRealTimeMode();
+                } else {
+                    this.enableRealTimeMode();
+                }
+            },
+
+            startAutoSync() {
+                // 清除舊的定時器
+                if (this.autoSyncInterval) {
+                    clearInterval(this.autoSyncInterval);
+                }
+                
+                // 每5秒同步一次
+                this.autoSyncInterval = setInterval(() => {
+                    if (this.realTimeMode && !this.isSyncing) {
+                        this.syncWithSheets();
+                    }
+                }, 5000);
+            },
+
+            stopAutoSync() {
+                if (this.autoSyncInterval) {
+                    clearInterval(this.autoSyncInterval);
+                    this.autoSyncInterval = null;
+                }
+            },
+
+            async syncWithSheets() {
+                if (!this.scriptUrl || !this.realTimeMode || this.isSyncing) return;
+                
+                this.isSyncing = true;
+                this.updateSyncIndicator('syncing');
+                
+                try {
+                    const response = await fetch(`${this.scriptUrl}?action=getRealtimeData`);
+                    
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // 比對資料是否有變化
+                        const dataHash = this.generateDataHash(result.data);
+                        
+                        if (dataHash !== this.lastDataHash) {
+                            // 資料有變化，更新本地
+                            this.employees = result.data.employees || [];
+                            this.shifts = result.data.shifts || [];
+                            this.schedules = result.data.schedules || {};
+                            
+                            this.lastDataHash = dataHash;
+                            
+                            // 儲存到本地
+                            this.saveLocalData();
+                            
+                            // 只在背景更新，不干擾用戶操作
+                            if (!this.isUserEditing()) {
+                                this.renderAll();
+                                console.log('資料已自動同步更新');
+                            }
+                        }
+                        
+                        // 更新同步狀態
+                        this.lastSyncTime = new Date().toISOString();
+                        document.getElementById('lastSyncTime').textContent = 
+                            new Date(this.lastSyncTime).toLocaleTimeString('zh-TW');
+                        
+                        this.updateSyncIndicator('success');
+                        this.syncFailCount = 0;
+                        this.updateSyncStatus(true);
+                    }
+                } catch (error) {
+                    console.error('自動同步失敗:', error);
+                    this.syncFailCount++;
+                    
+                    if (this.syncFailCount >= 3) {
+                        // 連續失敗3次，顯示警告
+                        this.updateSyncIndicator('error');
+                        this.showToast('同步連線中斷，請檢查網路', 'error');
+                        
+                        // 暫時停用即時同步
+                        if (this.syncFailCount >= 5) {
+                            this.disableRealTimeMode();
+                            this.showToast('即時同步已自動停用', 'error');
+                        }
+                    }
+                } finally {
+                    this.isSyncing = false;
+                }
+            },
+
+            updateSyncIndicator(status) {
+                const indicator = document.getElementById('syncIndicator');
+                const text = indicator.querySelector('.sync-text');
+                
+                // 移除所有狀態類別
+                indicator.classList.remove('syncing', 'error', 'success');
+                
+                switch(status) {
+                    case 'syncing':
+                        indicator.classList.add('syncing');
+                        text.textContent = '同步中...';
+                        break;
+                    case 'error':
+                        indicator.classList.add('error');
+                        text.textContent = '同步錯誤';
+                        break;
+                    case 'success':
+                    default:
+                        indicator.classList.add('success');
+                        text.textContent = '即時同步已啟用';
+                        break;
+                }
+            },
+
+            // === 資料載入與儲存 ===
+            async loadFromCloud() {
+                if (!this.scriptUrl) return;
+                
+                try {
+                    const response = await fetch(`${this.scriptUrl}?action=getRealtimeData`);
+                    const result = await response.json();
+                    
+                    if (result.success && result.data) {
+                        this.employees = result.data.employees || [];
+                        this.shifts = result.data.shifts || [];
+                        this.schedules = result.data.schedules || {};
+                        
+                        this.lastDataHash = this.generateDataHash(result.data);
+                        
+                        // 儲存到本地作為快取
+                        this.saveLocalData();
+                        
+                        this.updateSyncStatus(true);
+                        console.log('已從雲端載入資料');
+                    }
+                } catch (error) {
+                    console.error('無法從雲端載入，使用本地資料:', error);
+                    this.loadLocalData();
+                    this.updateSyncStatus(false);
+                }
+            },
+
+            loadLocalData() {
+                const config = localStorage.getItem('bleuConfig');
+                const schedules = localStorage.getItem('bleuSchedules');
+                
+                if (config) {
+                    const configData = JSON.parse(config);
+                    this.employees = configData.employees || [];
+                    this.shifts = configData.shifts || [];
+                }
+                
+                if (schedules) {
+                    this.schedules = JSON.parse(schedules);
+                }
+                
+                // 如果沒有資料，初始化預設資料
+                if (this.employees.length === 0) {
+                    this.initDefaultData();
+                }
+                
+                if (this.shifts.length === 0) {
+                    this.initDefaultShifts();
+                }
+            },
+
+            saveLocalData() {
+                const config = {
+                    employees: this.employees,
+                    shifts: this.shifts,
+                    version: this.cacheVersion,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('bleuConfig', JSON.stringify(config));
+                localStorage.setItem('bleuSchedules', JSON.stringify(this.schedules));
+                
+                // 相容舊版本
+                const fullData = {
+                    employees: this.employees,
+                    schedules: this.schedules,
+                    shifts: this.shifts,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem('bleuScheduleData', JSON.stringify(fullData));
+                localStorage.setItem('lastLocalUpdate', new Date().toISOString());
+            },
+
+            initDefaultData() {
+                this.employees = [
+                    { 
+                        id: 1, 
+                        name: '王小明', 
+                        avatarText: '明',
+                        type: 'fulltime', 
+                        phone: '0912345678', 
+                        email: 'ming@example.com' 
+                    },
+                    { 
+                        id: 2, 
+                        name: '李小華', 
+                        avatarText: '華',
+                        type: 'fulltime', 
+                        phone: '0923456789', 
+                        email: 'hua@example.com' 
+                    },
+                    { 
+                        id: 3, 
+                        name: '張大偉', 
+                        avatarText: 'W',
+                        type: 'parttime', 
+                        phone: '0934567890', 
+                        email: 'wei@example.com' 
+                    }
+                ];
+                this.saveLocalData();
+            },
+            
+            initDefaultShifts() {
+                if (this.shifts.length === 0) {
+                    this.shifts = [
+                        { id: 1, name: '早班', startTime: '08:00', endTime: '16:00' },
+                        { id: 2, name: '午班', startTime: '16:00', endTime: '00:00' },
+                        { id: 3, name: '晚班', startTime: '00:00', endTime: '08:00' }
+                    ];
+                    this.saveLocalData();
+                }
+            },
+
+            // === Script URL 管理 ===
+            loadScriptUrl() {
+                const savedUrl = localStorage.getItem('bleuScriptUrl');
+                if (savedUrl) {
+                    this.scriptUrl = savedUrl;
+                    document.getElementById('scriptUrlInput').value = savedUrl;
+                }
+            },
+
+            saveScriptUrl() {
+                const urlInput = document.getElementById('scriptUrlInput');
+                const url = urlInput.value.trim();
+                
+                if (!url) {
+                    this.showToast('請輸入 Script URL', 'error');
+                    return;
+                }
+                
+                if (!url.startsWith('https://script.google.com/')) {
+                    this.showToast('請輸入有效的 Google Apps Script URL', 'error');
+                    return;
+                }
+                
+                this.scriptUrl = url;
+                localStorage.setItem('bleuScriptUrl', url);
+                this.showToast('Script URL 已儲存', 'success');
+                
+                // 自動啟用即時同步
+                this.enableRealTimeMode();
+            },
+
+            async testConnection() {
+                if (!this.scriptUrl) {
+                    this.showToast('請先設定 Script URL', 'error');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${this.scriptUrl}?action=getStatus`);
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            this.showToast('Google Sheets 連線正常', 'success');
+                            this.updateSyncStatus(true);
+                            
+                            const status = result.status;
+                            this.showToast(
+                                `雲端狀態：${status.employeesCount || 0} 位員工，${status.shiftsCount || 0} 個班次，${status.schedulesCount || 0} 筆排班`,
+                                'success'
+                            );
+                            return true;
+                        }
+                    }
+                } catch (error) {
+                    this.showToast('無法連接到 Google Sheets', 'error');
+                    this.updateSyncStatus(false);
+                    return false;
+                }
+                return false;
+            },
+
+            // === 員工管理（即時寫入） ===
+            async saveEmployee() {
+                const name = document.getElementById('employeeName').value.trim();
+                const avatarText = document.getElementById('employeeAvatarText').value.trim();
+                
+                if (!name) {
+                    this.showToast('請輸入員工姓名', 'error');
+                    return;
+                }
+                
+                const employeeData = { 
+                    name, 
+                    avatarText, 
+                    type: document.getElementById('employeeType').value,
+                    phone: document.getElementById('employeePhone').value.trim(),
+                    email: document.getElementById('employeeEmail').value.trim()
+                };
+
+                // 如果是編輯模式，加上 ID
+                if (this.editingEmployee) {
+                    employeeData.id = this.editingEmployee.id;
+                }
+
+                // 如果啟用即時同步，寫入雲端
+                if (this.realTimeMode && this.scriptUrl) {
+                    try {
+                        const response = await fetch(`${this.scriptUrl}?action=writeEmployee`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'text/plain',
+                            },
+                            mode: 'no-cors',
+                            body: JSON.stringify({ data: employeeData })
+                        });
+                        
+                        // 等待一下讓伺服器處理
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        // 重新同步資料
+                        await this.syncWithSheets();
+                        
+                        this.showToast(this.editingEmployee ? '員工資料已更新' : '新員工已新增', 'success');
+                    } catch (error) {
+                        console.error('儲存員工失敗:', error);
+                        this.showToast('儲存失敗，請重試', 'error');
+                        return;
+                    }
+                } else {
+                    // 本地模式
+                    if (this.editingEmployee) {
+                        Object.assign(this.editingEmployee, employeeData);
+                    } else {
+                        employeeData.id = Date.now();
+                        this.employees.push(employeeData);
+                    }
+                    this.saveLocalData();
+                    this.renderAll();
+                    this.showToast(this.editingEmployee ? '員工資料已更新' : '新員工已新增', 'success');
+                }
+
+                this.closeModal('employeeModal');
+            },
+
+            async deleteEmployee() {
+                if (!this.editingEmployee || !confirm(`確定刪除員工 ${this.editingEmployee.name} 嗎？相關排班也會被移除。`)) return;
+                
+                const employeeId = this.editingEmployee.id;
+                const employeeName = this.editingEmployee.name;
+                
+                // 如果啟用即時同步，從雲端刪除
+                if (this.realTimeMode && this.scriptUrl) {
+                    try {
+                        const response = await fetch(`${this.scriptUrl}?action=deleteEmployee`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'text/plain',
+                            },
+                            mode: 'no-cors',
+                            body: JSON.stringify({ data: { id: employeeId } })
+                        });
+                        
+                        // 等待處理
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        // 重新同步資料
+                        await this.syncWithSheets();
+                        
+                        this.showToast(`員工 ${employeeName} 已刪除`, 'success');
+                    } catch (error) {
+                        console.error('刪除員工失敗:', error);
+                        this.showToast('刪除失敗，請重試', 'error');
+                        return;
+                    }
+                } else {
+                    // 本地模式
+                    this.employees = this.employees.filter(e => e.id !== employeeId);
+                    
+                    // 刪除相關排班
+                    Object.keys(this.schedules).forEach(date => {
+                        this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
+                        if (this.schedules[date].length === 0) delete this.schedules[date];
+                    });
+                    
+                    this.saveLocalData();
+                    this.renderAll();
+                    this.showToast(`員工 ${employeeName} 已刪除`, 'success');
+                }
+                
+                this.closeModal('employeeModal');
+            },
+
+                // === 班次管理（即時寫入） ===
             async saveShift() {
                 const name = document.getElementById('shiftName').value.trim();
                 const startTime = document.getElementById('shiftStartTime').value;

@@ -879,7 +879,7 @@
             currentMonth: new Date(),
             editingEmployee: null,
             currentDate: null,
-            scriptUrl: 'https://script.google.com/macros/s/AKfycbxBCtXs8OKyhEUOeHjFDFe_au1FrG3iPfMRaPLm5lEHDsCXmJIjQebzpk8OJG9--Q_3nA/exec',
+            scriptUrl: 'https://script.google.com/macros/s/AKfycbzmE1TD_KsFCGx0GzcSUODCD7lourgSOEI21YhZw9gARiSjFCJ2XSpiMcc0WvZyawS0hA/exe',
             isConnected: false,
             lastSyncTime: null,
 
@@ -1463,34 +1463,63 @@
                 try {
                     const sheetData = this.prepareSheetData();
                     
-                    // 使用 fetch 但不期待回應（避免 CORS）
-                    fetch(this.scriptUrl, {
-                        method: 'POST',
-                        mode: 'no-cors', // 重要：避免 CORS 錯誤
-                        headers: {
-                            'Content-Type': 'text/plain',
-                        },
-                        body: JSON.stringify({
-                            data: sheetData,
-                            timestamp: new Date().toISOString()
-                        })
-                    });
+                    // 方法 1：使用 Image 標籤發送（簡單但有長度限制）
+                    const img = new Image();
+                    const dataString = encodeURIComponent(JSON.stringify(sheetData));
                     
-                    // 因為 no-cors 模式無法讀取回應，我們假設成功
-                    // 等待一小段時間確保請求已發送
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    // 檢查資料長度
+                    if (dataString.length > 2000) {
+                        // 如果資料太長，分批發送
+                        await this.syncLargeData(sheetData);
+                    } else {
+                        // 資料較短，直接發送
+                        img.src = `${this.scriptUrl}?action=save&data=${dataString}&t=${Date.now()}`;
+                        
+                        // 等待請求完成
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    }
                     
                     this.updateSyncStatus(true);
-                    this.showToast('資料已上傳到 Google Sheets（請稍後在試算表確認）', 'success');
+                    this.showToast('資料已上傳到 Google Sheets！請稍後在試算表確認', 'success');
                     
                 } catch (error) {
                     console.error('上傳錯誤:', error);
                     this.updateSyncStatus(false);
-                    this.showToast('上傳過程發生錯誤', 'error');
+                    this.showToast('上傳失敗：' + error.message, 'error');
                 } finally {
                     uploadBtn.innerHTML = originalHTML;
                     uploadBtn.disabled = false;
                 }
+            },
+
+            // 處理大量資料的分批上傳
+            async syncLargeData(fullData) {
+                // 方法 2：使用 iframe + form 提交（可處理較大資料）
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.name = 'upload_iframe_' + Date.now();
+                document.body.appendChild(iframe);
+                
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = this.scriptUrl;
+                form.target = iframe.name;
+                
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'data';
+                input.value = JSON.stringify(fullData);
+                form.appendChild(input);
+                
+                document.body.appendChild(form);
+                form.submit();
+                
+                // 等待上傳完成
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // 清理
+                document.body.removeChild(form);
+                document.body.removeChild(iframe);
             },
 
             async loadFromSheets() {

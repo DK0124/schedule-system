@@ -1769,116 +1769,134 @@
             },
 
             // === 員工管理（即時寫入） ===
-            async saveEmployee() {
-                const name = document.getElementById('employeeName').value.trim();
-                const avatarText = document.getElementById('employeeAvatarText').value.trim();
-                
-                if (!name) {
-                    this.showToast('請輸入員工姓名', 'error');
-                    return;
-                }
-                
-                const employeeData = { 
-                    name, 
-                    avatarText, 
-                    type: document.getElementById('employeeType').value,
-                    phone: document.getElementById('employeePhone').value.trim(),
-                    email: document.getElementById('employeeEmail').value.trim()
-                };
+			async saveEmployee() {
+				const name = document.getElementById('employeeName').value.trim();
+				const avatarText = document.getElementById('employeeAvatarText').value.trim();
+				
+				if (!name) {
+					this.showToast('請輸入員工姓名', 'error');
+					return;
+				}
+				
+				const employeeData = { 
+					name, 
+					avatarText: avatarText || name.charAt(0), 
+					type: document.getElementById('employeeType').value,
+					phone: document.getElementById('employeePhone').value.trim(),
+					email: document.getElementById('employeeEmail').value.trim()
+				};
 
-                // 如果是編輯模式，加上 ID
-                if (this.editingEmployee) {
-                    employeeData.id = this.editingEmployee.id;
-                }
+				if (this.editingEmployee) {
+					employeeData.id = this.editingEmployee.id;
+				}
 
-                // 如果啟用即時同步，寫入雲端
-                if (this.realTimeMode && this.scriptUrl) {
-                    try {
-                        const response = await fetch(`${this.scriptUrl}?action=writeEmployee`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'text/plain',
-                            },
-                            mode: 'no-cors',
-                            body: JSON.stringify({ data: employeeData })
-                        });
-                        
-                        // 等待一下讓伺服器處理
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        
-                        // 重新同步資料
-                        await this.syncWithSheets();
-                        
-                        this.showToast(this.editingEmployee ? '員工資料已更新' : '新員工已新增', 'success');
-                    } catch (error) {
-                        console.error('儲存員工失敗:', error);
-                        this.showToast('儲存失敗，請重試', 'error');
-                        return;
-                    }
-                } else {
-                    // 本地模式
-                    if (this.editingEmployee) {
-                        Object.assign(this.editingEmployee, employeeData);
-                    } else {
-                        employeeData.id = Date.now();
-                        this.employees.push(employeeData);
-                    }
-                    this.saveLocalData();
-                    this.renderAll();
-                    this.showToast(this.editingEmployee ? '員工資料已更新' : '新員工已新增', 'success');
-                }
+				// 如果啟用即時同步，寫入雲端
+				if (this.realTimeMode && this.scriptUrl) {
+					try {
+						// 使用 GET 請求帶參數（避免 CORS 問題）
+						const params = new URLSearchParams();
+						params.append('action', 'writeEmployee');
+						params.append('data', JSON.stringify(employeeData));
+						
+						const response = await fetch(`${this.scriptUrl}?${params.toString()}`);
+						const result = await response.json();
+						
+						if (result.success) {
+							// 立即更新本地資料
+							if (this.editingEmployee) {
+								Object.assign(this.editingEmployee, employeeData);
+							} else {
+								employeeData.id = result.id || Date.now();
+								this.employees.push(employeeData);
+							}
+							
+							// 更新畫面
+							this.renderAll();
+							this.showToast(this.editingEmployee ? '員工資料已更新' : '新員工已新增', 'success');
+							
+							// 延遲同步完整資料
+							setTimeout(() => this.syncWithSheets(), 1000);
+						} else {
+							throw new Error(result.error || '儲存失敗');
+						}
+					} catch (error) {
+						console.error('儲存員工失敗:', error);
+						this.showToast('儲存失敗，請重試', 'error');
+						return;
+					}
+				} else {
+					// 本地模式
+					if (this.editingEmployee) {
+						Object.assign(this.editingEmployee, employeeData);
+					} else {
+						employeeData.id = Date.now();
+						this.employees.push(employeeData);
+					}
+					this.saveLocalData();
+					this.renderAll();
+					this.showToast(this.editingEmployee ? '員工資料已更新' : '新員工已新增', 'success');
+				}
 
-                this.closeModal('employeeModal');
-            },
+				this.closeModal('employeeModal');
+			},
 
-            async deleteEmployee() {
-                if (!this.editingEmployee || !confirm(`確定刪除員工 ${this.editingEmployee.name} 嗎？相關排班也會被移除。`)) return;
-                
-                const employeeId = this.editingEmployee.id;
-                const employeeName = this.editingEmployee.name;
-                
-                // 如果啟用即時同步，從雲端刪除
-                if (this.realTimeMode && this.scriptUrl) {
-                    try {
-                        const response = await fetch(`${this.scriptUrl}?action=deleteEmployee`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'text/plain',
-                            },
-                            mode: 'no-cors',
-                            body: JSON.stringify({ data: { id: employeeId } })
-                        });
-                        
-                        // 等待處理
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        
-                        // 重新同步資料
-                        await this.syncWithSheets();
-                        
-                        this.showToast(`員工 ${employeeName} 已刪除`, 'success');
-                    } catch (error) {
-                        console.error('刪除員工失敗:', error);
-                        this.showToast('刪除失敗，請重試', 'error');
-                        return;
-                    }
-                } else {
-                    // 本地模式
-                    this.employees = this.employees.filter(e => e.id !== employeeId);
-                    
-                    // 刪除相關排班
-                    Object.keys(this.schedules).forEach(date => {
-                        this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
-                        if (this.schedules[date].length === 0) delete this.schedules[date];
-                    });
-                    
-                    this.saveLocalData();
-                    this.renderAll();
-                    this.showToast(`員工 ${employeeName} 已刪除`, 'success');
-                }
-                
-                this.closeModal('employeeModal');
-            },
-
+			async deleteEmployee() {
+				if (!this.editingEmployee || !confirm(`確定刪除員工 ${this.editingEmployee.name} 嗎？相關排班也會被移除。`)) return;
+				
+				const employeeId = this.editingEmployee.id;
+				const employeeName = this.editingEmployee.name;
+				
+				// 如果啟用即時同步，從雲端刪除
+				if (this.realTimeMode && this.scriptUrl) {
+					try {
+						const params = new URLSearchParams();
+						params.append('action', 'deleteEmployee');
+						params.append('data', JSON.stringify({ id: employeeId }));
+						
+						const response = await fetch(`${this.scriptUrl}?${params.toString()}`);
+						const result = await response.json();
+						
+						if (result.success) {
+							// 立即更新本地資料
+							this.employees = this.employees.filter(e => e.id !== employeeId);
+							
+							// 刪除相關排班
+							Object.keys(this.schedules).forEach(date => {
+								this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
+								if (this.schedules[date].length === 0) delete this.schedules[date];
+							});
+							
+							// 更新畫面
+							this.renderAll();
+							this.showToast(`員工 ${employeeName} 已刪除`, 'success');
+							
+							// 延遲同步
+							setTimeout(() => this.syncWithSheets(), 1000);
+						} else {
+							throw new Error(result.error || '刪除失敗');
+						}
+					} catch (error) {
+						console.error('刪除員工失敗:', error);
+						this.showToast('刪除失敗，請重試', 'error');
+						return;
+					}
+				} else {
+					// 本地模式
+					this.employees = this.employees.filter(e => e.id !== employeeId);
+					
+					Object.keys(this.schedules).forEach(date => {
+						this.schedules[date] = this.schedules[date].filter(s => s.employeeId !== employeeId);
+						if (this.schedules[date].length === 0) delete this.schedules[date];
+					});
+					
+					this.saveLocalData();
+					this.renderAll();
+					this.showToast(`員工 ${employeeName} 已刪除`, 'success');
+				}
+				
+				this.closeModal('employeeModal');
+			},
+            
                 // === 班次管理（即時寫入） ===
             async saveShift() {
                 const name = document.getElementById('shiftName').value.trim();
@@ -1990,114 +2008,94 @@
                 }
             },
 
-            // === 排班管理（即時寫入） ===
-            async saveSchedule() {
-                const startTime = document.getElementById('startTime').value;
-                const endTime = document.getElementById('endTime').value;
-                const notes = document.getElementById('scheduleNotes').value.trim();
-                
-                const selectedEmployees = [];
-                document.querySelectorAll('.employee-checkbox input:checked').forEach(checkbox => {
-                    selectedEmployees.push(parseInt(checkbox.value));
-                });
-                
-                if (selectedEmployees.length === 0) {
-                    this.showToast('請選擇至少一位員工', 'error');
-                    return;
-                }
-                
-                if (!startTime || !endTime) {
-                    this.showToast('請設定時間', 'error');
-                    return;
-                }
-                
-                // 如果啟用即時同步，批次寫入雲端
-                if (this.realTimeMode && this.scriptUrl) {
-                    const schedules = [];
-                    
-                    for (const employeeId of selectedEmployees) {
-                        // 檢查衝突
-                        if (!this.schedules[this.currentDate]) {
-                            this.schedules[this.currentDate] = [];
-                        }
-                        
-                        const hasConflict = this.schedules[this.currentDate].some(s => 
-                            s.employeeId === employeeId && 
-                            this.isTimeOverlap(s.startTime, s.endTime, startTime, endTime)
-                        );
-                        
-                        if (!hasConflict) {
-                            schedules.push({
-                                date: this.currentDate,
-                                employeeId: employeeId,
-                                startTime: startTime,
-                                endTime: endTime,
-                                notes: notes
-                            });
-                        } else {
-                            const employee = this.getEmployeeById(employeeId);
-                            this.showToast(`${employee.name} 在該時段已有排班`, 'error');
-                        }
-                    }
-                    
-                    if (schedules.length > 0) {
-                        try {
-                            const response = await fetch(`${this.scriptUrl}?action=batchWriteSchedules`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'text/plain',
-                                },
-                                mode: 'no-cors',
-                                body: JSON.stringify({ data: schedules })
-                            });
-                            
-                            await new Promise(resolve => setTimeout(resolve, 1500));
-                            await this.syncWithSheets();
-                            
-                            this.showToast(`已新增 ${schedules.length} 筆排班`, 'success');
-                        } catch (error) {
-                            console.error('儲存排班失敗:', error);
-                            this.showToast('儲存失敗，請重試', 'error');
-                            return;
-                        }
-                    }
-                } else {
-                    // 本地模式
-                    if (!this.schedules[this.currentDate]) {
-                        this.schedules[this.currentDate] = [];
-                    }
-                    
-                    selectedEmployees.forEach(employeeId => {
-                        const hasConflict = this.schedules[this.currentDate].some(s => 
-                            s.employeeId === employeeId && 
-                            this.isTimeOverlap(s.startTime, s.endTime, startTime, endTime)
-                        );
-                        
-                        if (!hasConflict) {
-                            this.schedules[this.currentDate].push({
-                                employeeId,
-                                startTime,
-                                endTime,
-                                notes
-                            });
-                        } else {
-                            const employee = this.getEmployeeById(employeeId);
-                            this.showToast(`${employee.name} 在該時段已有排班`, 'error');
-                        }
-                    });
-                    
-                    this.saveLocalData();
-                    this.renderCalendar();
-                    this.showToast('排班已儲存', 'success');
-                }
-                
-                this.loadCurrentSchedules();
-                
-                // 清除選擇
-                document.querySelectorAll('.employee-checkbox input:checked').forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-            },
+			async saveSchedule() {
+				const startTime = document.getElementById('startTime').value;
+				const endTime = document.getElementById('endTime').value;
+				const notes = document.getElementById('scheduleNotes').value.trim();
+				
+				const selectedEmployees = [];
+				document.querySelectorAll('.employee-checkbox input:checked').forEach(checkbox => {
+					selectedEmployees.push(parseInt(checkbox.value));
+				});
+				
+				if (selectedEmployees.length === 0) {
+					this.showToast('請選擇至少一位員工', 'error');
+					return;
+				}
+				
+				if (!startTime || !endTime) {
+					this.showToast('請設定時間', 'error');
+					return;
+				}
+				
+				// 先更新本地資料
+				if (!this.schedules[this.currentDate]) {
+					this.schedules[this.currentDate] = [];
+				}
+				
+				const newSchedules = [];
+				selectedEmployees.forEach(employeeId => {
+					const hasConflict = this.schedules[this.currentDate].some(s => 
+						s.employeeId === employeeId && 
+						this.isTimeOverlap(s.startTime, s.endTime, startTime, endTime)
+					);
+					
+					if (!hasConflict) {
+						const schedule = {
+							employeeId,
+							startTime,
+							endTime,
+							notes
+						};
+						this.schedules[this.currentDate].push(schedule);
+						newSchedules.push({
+							date: this.currentDate,
+							...schedule
+						});
+					} else {
+						const employee = this.getEmployeeById(employeeId);
+						this.showToast(`${employee.name} 在該時段已有排班`, 'error');
+					}
+				});
+				
+				// 立即更新畫面
+				this.renderCalendar();
+				this.loadCurrentSchedules();
+				
+				// 如果啟用即時同步，寫入雲端
+				if (this.realTimeMode && this.scriptUrl && newSchedules.length > 0) {
+					try {
+						const params = new URLSearchParams();
+						params.append('action', 'batchWriteSchedules');
+						params.append('data', JSON.stringify(newSchedules));
+						
+						const response = await fetch(`${this.scriptUrl}?${params.toString()}`);
+						const result = await response.json();
+						
+						if (result.success) {
+							this.showToast(`已新增 ${newSchedules.length} 筆排班`, 'success');
+							
+							// 延遲同步完整資料
+							setTimeout(() => this.syncWithSheets(), 1000);
+						} else {
+							throw new Error(result.error || '儲存失敗');
+						}
+					} catch (error) {
+						console.error('儲存排班失敗:', error);
+						// 不要回滾本地更新，避免使用者重複操作
+						this.saveLocalData();
+					}
+				} else {
+					// 本地模式
+					this.saveLocalData();
+					this.showToast('排班已儲存', 'success');
+				}
+				
+				// 清除選擇
+				document.querySelectorAll('.employee-checkbox input:checked').forEach(checkbox => {
+					checkbox.checked = false;
+				});
+			},
 
             async removeSchedule(index) {
                 if (this.schedules[this.currentDate]) {

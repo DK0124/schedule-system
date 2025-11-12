@@ -1710,7 +1710,7 @@
                 data.push(['匯出時間', new Date().toLocaleString('zh-TW')]);
                 data.push([]);
                 
-                data.push(['=== 員工資料 ===']);
+                data.push(['員工資料']);
                 data.push(['ID', '姓名', '頭像文字', '類型', '電話', 'Email']);
                 this.employees.forEach(emp => {
                     data.push([
@@ -1773,7 +1773,7 @@
                     const row = data[i];
                     if (!row || row.length === 0) continue;
                     
-                    if (row[0] === '=== 員工資料 ===') {
+                    if (row[0] === '員工資料') {
                         section = 'employees';
                         i++;
                         continue;

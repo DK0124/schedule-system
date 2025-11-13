@@ -143,6 +143,21 @@
             color: white;
         }
 
+        /* 同步狀態 */
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: auto;
+        }
+
+        #syncStatus {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         /* 統計卡片 */
         .stats-container {
             display: grid;
@@ -519,6 +534,37 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Toast 動畫 */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .toast {
+            transition: all 0.3s ease;
+        }
+        
+        .toast:hover {
+            transform: scale(1.02);
+        }
+
         /* 響應式設計 */
         @media (max-width: 768px) {
             .header {
@@ -553,6 +599,11 @@
             .tabs {
                 overflow-x: auto;
             }
+
+            .sync-status {
+                margin-left: 0;
+                width: 100%;
+            }
         }
 
         /* 列印樣式 */
@@ -569,7 +620,8 @@
 
             .date-controls,
             .view-modes,
-            .export-buttons {
+            .export-buttons,
+            .sync-status {
                 display: none;
             }
 
@@ -577,47 +629,6 @@
                 box-shadow: none;
                 padding: 20px;
             }
-        }
-
-        /* 工具提示 */
-        .tooltip {
-            position: relative;
-        }
-
-        .tooltip:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--dark);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 6px;
-            white-space: nowrap;
-            font-size: 12px;
-            z-index: 100;
-        }
-
-        /* 狀態標記 */
-        .status-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-
-        .status-dot.working {
-            background: var(--success);
-        }
-
-        .status-dot.off {
-            background: var(--gray);
-        }
-
-        .status-dot.leave {
-            background: var(--warning);
         }
     </style>
 </head>
@@ -641,7 +652,7 @@
             <button class="date-btn" onclick="App.previousPeriod()">
                 <span class="material-icons">chevron_left</span>
             </button>
-            <div class="current-date" id="currentPeriod">2024年11月</div>
+            <div class="current-date" id="currentPeriod">2025年11月</div>
             <button class="date-btn" onclick="App.nextPeriod()">
                 <span class="material-icons">chevron_right</span>
             </button>
@@ -662,6 +673,15 @@
             <button class="view-mode-btn" onclick="App.setViewMode('list')">
                 <span class="material-icons">list</span>
                 清單
+            </button>
+        </div>
+
+        <div class="sync-status">
+            <div id="syncStatus">
+                <span style="color: var(--gray);">● 連線中...</span>
+            </div>
+            <button class="date-btn" onclick="App.refresh()" title="重新整理 (Ctrl+R)">
+                <span class="material-icons">refresh</span>
             </button>
         </div>
     </div>
@@ -756,6 +776,9 @@
 
     <script>
         const App = {
+            // GAS 設定
+            scriptUrl: 'https://script.google.com/macros/s/AKfycbzDImzTB17fp5FViVwXtIzxUrH-ByJ4p2lRrk__YPG-DJctKsE2YRZ3CqXlrHkZeZbW3A/exec',
+            
             // 資料
             employees: [],
             shifts: [],
@@ -769,18 +792,30 @@
                 type: 'all',
                 shift: 'all'
             },
+            syncEnabled: false,
+            lastSyncTime: null,
 
             // 初始化
-            init() {
+            async init() {
                 console.log('Boss Overview 初始化...');
-                this.loadData();
+                this.showLoading();
+                
+                // 先嘗試從 localStorage 載入資料
+                this.loadLocalData();
+                
+                // 然後從 GAS 載入最新資料
+                await this.loadFromCloud();
+                
                 this.setupEventListeners();
                 this.updateDisplay();
+                this.hideLoading();
+                
+                // 設定自動同步
+                this.startAutoSync();
             },
 
-            // 載入資料
-            loadData() {
-                // 從 localStorage 載入資料
+            // 從 localStorage 載入資料
+            loadLocalData() {
                 const savedEmployees = localStorage.getItem('employees');
                 const savedShifts = localStorage.getItem('shifts');
                 const savedSchedules = localStorage.getItem('schedules');
@@ -801,23 +836,157 @@
                 this.updateStatistics();
             },
 
+            // 從 Google Sheets 載入資料
+            async loadFromCloud() {
+                try {
+                    console.log('從 Google Sheets 載入資料...');
+                    
+                    const response = await fetch(`${this.scriptUrl}?action=getRealtimeData`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success && result.data) {
+                        console.log('成功載入雲端資料:', result.data);
+                        
+                        // 更新本地資料
+                        this.employees = result.data.employees || [];
+                        this.shifts = result.data.shifts || [];
+                        this.schedules = result.data.schedules || {};
+                        
+                        // 儲存到 localStorage
+                        localStorage.setItem('employees', JSON.stringify(this.employees));
+                        localStorage.setItem('shifts', JSON.stringify(this.shifts));
+                        localStorage.setItem('schedules', JSON.stringify(this.schedules));
+                        
+                        // 更新顯示
+                        this.updateShiftFilter();
+                        this.updateStatistics();
+                        this.updateDisplay();
+                        
+                        // 更新同步狀態
+                        this.lastSyncTime = new Date();
+                        this.updateSyncStatus(true);
+                        
+                        this.showToast('資料同步成功', 'success');
+                        
+                        return true;
+                    } else {
+                        throw new Error(result.error || '無法載入資料');
+                    }
+                } catch (error) {
+                    console.error('載入雲端資料失敗:', error);
+                    this.showToast('無法連接到雲端資料，使用本地快取', 'warning');
+                    this.updateSyncStatus(false);
+                    return false;
+                }
+            },
+
+            // 開始自動同步
+            startAutoSync() {
+                // 每 30 秒自動同步一次
+                setInterval(async () => {
+                    if (this.syncEnabled) {
+                        await this.loadFromCloud();
+                    }
+                }, 30000);
+                
+                // 預設啟用自動同步
+                this.syncEnabled = true;
+            },
+
+            // 手動重新整理
+            async refresh() {
+                this.showLoading();
+                const success = await this.loadFromCloud();
+                this.hideLoading();
+                
+                if (success) {
+                    this.updateDisplay();
+                }
+            },
+
+            // 更新同步狀態顯示
+            updateSyncStatus(isConnected) {
+                const statusHtml = isConnected 
+                    ? '<span style="color: var(--success);">● 已連線</span>'
+                    : '<span style="color: var(--danger);">● 離線</span>';
+                
+                document.getElementById('syncStatus').innerHTML = statusHtml;
+            },
+
+            // 顯示載入動畫
+            showLoading() {
+                document.getElementById('loading').style.display = 'flex';
+            },
+
+            // 隱藏載入動畫
+            hideLoading() {
+                document.getElementById('loading').style.display = 'none';
+            },
+
+            // 顯示提示訊息
+            showToast(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.textContent = message;
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    background: ${type === 'success' ? 'var(--success)' : type === 'warning' ? 'var(--warning)' : 'var(--primary)'};
+                    color: white;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    z-index: 9999;
+                    animation: slideIn 0.3s ease;
+                `;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            },
+
             // 設定事件監聽
             setupEventListeners() {
                 // 鍵盤快捷鍵
                 document.addEventListener('keydown', (e) => {
-                    if (e.key === 'ArrowLeft') {
+                    if (e.key === 'ArrowLeft' && !e.shiftKey) {
                         this.previousPeriod();
-                    } else if (e.key === 'ArrowRight') {
+                    } else if (e.key === 'ArrowRight' && !e.shiftKey) {
                         this.nextPeriod();
                     } else if (e.key === 'Escape') {
                         this.goToToday();
+                    } else if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                        e.preventDefault();
+                        this.refresh();
                     }
                 });
 
-                // 自動更新
-                setInterval(() => {
-                    this.updateStatistics();
-                }, 60000); // 每分鐘更新一次
+                // 視窗焦點事件
+                window.addEventListener('focus', () => {
+                    if (this.syncEnabled) {
+                        this.loadFromCloud();
+                    }
+                });
+
+                // 線上/離線事件
+                window.addEventListener('online', () => {
+                    this.showToast('網路已連接', 'success');
+                    this.loadFromCloud();
+                });
+
+                window.addEventListener('offline', () => {
+                    this.showToast('網路已斷開', 'warning');
+                    this.updateSyncStatus(false);
+                });
             },
 
             // 更新顯示
@@ -1135,7 +1304,6 @@
 
             // 渲染統計分析
             renderStatistics() {
-                // 這裡可以加入更詳細的統計圖表
                 let html = '<div style="padding: 20px; text-align: center; color: var(--gray);">';
                 html += '<span class="material-icons" style="font-size: 48px;">insert_chart</span>';
                 html += '<p>統計分析功能開發中...</p>';
@@ -1146,7 +1314,6 @@
 
             // 渲染員工比較
             renderComparison() {
-                // 這裡可以加入員工工時比較
                 let html = '<div style="padding: 20px; text-align: center; color: var(--gray);">';
                 html += '<span class="material-icons" style="font-size: 48px;">compare</span>';
                 html += '<p>員工比較功能開發中...</p>';
@@ -1196,8 +1363,6 @@
                     filtered = filtered.filter(e => e.type === this.filters.type);
                 }
                 
-                // 這裡可以加入更多篩選邏輯
-                
                 return filtered;
             },
 
@@ -1213,7 +1378,6 @@
 
             // 匯出 Excel
             exportExcel() {
-                // 簡單的 CSV 匯出
                 const year = this.currentDate.getFullYear();
                 const month = this.currentDate.getMonth() + 1;
                 const monthKey = `${year}-${String(month).padStart(2, '0')}`;

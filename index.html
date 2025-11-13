@@ -974,142 +974,6 @@
                 font-size: 14px;
                 margin-bottom: 10px;
             }
-            
-            .modal {
-                padding: 10px;
-            }
-            
-            .modal-content {
-                max-width: 100%;
-                max-height: 95vh;
-            }
-            
-            .modal-header {
-                padding: 15px;
-            }
-            
-            .modal-body {
-                padding: 15px;
-            }
-            
-            .modal-footer {
-                padding: 15px;
-                flex-wrap: wrap;
-            }
-            
-            .form-group {
-                margin-bottom: 15px;
-            }
-            
-            .form-label {
-                font-size: 12px;
-                margin-bottom: 6px;
-            }
-            
-            .form-control {
-                padding: 8px 10px;
-                font-size: 13px;
-            }
-            
-            .quick-settings {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 6px;
-            }
-            
-            .preset-shift {
-                padding: 8px;
-                font-size: 11px;
-            }
-            
-            .employee-select-list {
-                max-height: 150px;
-                padding: 6px;
-            }
-            
-            .employee-checkbox {
-                padding: 8px;
-                margin-bottom: 4px;
-            }
-            
-            .employee-checkbox label {
-                font-size: 13px;
-            }
-            
-            .scheduled-list {
-                margin-top: 15px;
-                padding: 10px;
-            }
-            
-            .scheduled-item {
-                padding: 8px;
-                margin-bottom: 6px;
-                font-size: 12px;
-            }
-            
-            .toast {
-                bottom: 10px;
-                padding: 10px 16px;
-                font-size: 13px;
-                max-width: calc(100% - 40px);
-            }
-            
-            .list-item {
-                padding: 10px;
-            }
-            
-            .avatar-initial {
-                width: 30px;
-                height: 30px;
-                font-size: 14px;
-            }
-            
-            .text-primary {
-                font-size: 13px;
-            }
-            
-            .text-secondary {
-                font-size: 11px;
-            }
-        }
-
-        /* 小手機優化 */
-        @media (max-width: 374px) {
-            .calendar-cell {
-                min-height: 60px;
-                padding: 2px;
-            }
-            
-            .date-number {
-                font-size: 11px;
-            }
-            
-            .weekday-header {
-                font-size: 10px;
-            }
-            
-            :root {
-                --avatar-current-size: 18px;
-            }
-            
-            .page-title h1 {
-                font-size: 18px;
-            }
-            
-            .btn {
-                padding: 5px 8px;
-                font-size: 11px;
-            }
-        }
-
-        /* 平板優化 */
-        @media (min-width: 768px) and (max-width: 1024px) {
-            .calendar-cell {
-                min-height: 100px;
-            }
-            
-            .floating-panel {
-                width: 380px;
-            }
         }
     </style>
 </head>
@@ -1911,7 +1775,7 @@
                 this.saveLocalData();
             },
 
-            // === 員工管理（修正版，樂觀更新） ===
+            // === 員工管理 ===
             async saveEmployee() {
                 const name = document.getElementById('employeeName').value.trim();
                 const avatarText = document.getElementById('employeeAvatarText').value.trim();
@@ -2009,7 +1873,7 @@
                 }
             },
             
-            // === 班次管理（修正版） ===
+            // === 班次管理 ===
             async saveShift() {
                 const name = document.getElementById('shiftName').value.trim();
                 const startTime = document.getElementById('shiftStartTime').value;
@@ -2106,7 +1970,7 @@
                 }
             },
 
-            // === 排班管理（修正版） ===
+            // === 排班管理 ===
             async saveSchedule() {
                 const startTime = document.getElementById('startTime').value;
                 const endTime = document.getElementById('endTime').value;
@@ -2373,19 +2237,67 @@
                 const badge = document.createElement('div');
                 badge.className = 'employee-avatar-badge';
                 badge.textContent = employee.avatarText || employee.name.charAt(0);
-                badge.style.backgroundColor = this.generateColorById(employee.id);
+                badge.style.backgroundColor = this.generateDistinctColor(employee.id, employee.name);
                 badge.title = `${employee.name}\n${schedule.startTime}-${schedule.endTime}${schedule.notes ? '\n備註: ' + schedule.notes : ''}`;
                 return badge;
             },
 
-            generateColorById(id) {
-                const colors = [
-                    "#e53935", "#d81b60", "#8e24aa", "#5e35b1", "#3949ab", 
-                    "#1e88e5", "#039be5", "#00acc1", "#00897b", "#43a047", 
-                    "#7cb342", "#c0ca33", "#fdd835", "#ffb300", "#fb8c00", 
-                    "#f4511e", "#6d4c41", "#757575", "#546e7a"
+            // 改進的顏色生成函數 - 生成明顯區分的顏色
+            generateDistinctColor(id, name) {
+                // 使用更豐富、更明顯區分的顏色組
+                const distinctColors = [
+                    "#E91E63", // 粉紅
+                    "#9C27B0", // 紫色
+                    "#673AB7", // 深紫
+                    "#3F51B5", // 靛藍
+                    "#2196F3", // 藍色
+                    "#03A9F4", // 淺藍
+                    "#00BCD4", // 青色
+                    "#009688", // 藍綠
+                    "#4CAF50", // 綠色
+                    "#8BC34A", // 淺綠
+                    "#CDDC39", // 萊姆綠
+                    "#FFC107", // 琥珀
+                    "#FF9800", // 橘色
+                    "#FF5722", // 深橘
+                    "#795548", // 棕色
+                    "#607D8B", // 藍灰
+                    "#F44336", // 紅色
+                    "#00ACC1", // 深青
+                    "#7B1FA2", // 深紫羅蘭
+                    "#303F9F", // 深藍
+                    "#0288D1", // 淺藍
+                    "#0097A7", // 深青綠
+                    "#00796B", // 深藍綠
+                    "#388E3C", // 深綠
+                    "#689F38", // 淺綠
+                    "#AFB42B", // 橄欖綠
+                    "#FFA000", // 深琥珀
+                    "#F57C00", // 深橘
+                    "#E64A19", // 深橘紅
+                    "#5D4037", // 深棕
+                    "#455A64", // 深藍灰
+                    "#C2185B", // 深粉紅
+                    "#7C4DFF", // 深紫羅蘭
+                    "#536DFE", // 靛藍
+                    "#448AFF", // 藍色
+                    "#40C4FF", // 淺藍
+                    "#18FFFF", // 青色
+                    "#64FFDA", // 藍綠
+                    "#69F0AE", // 綠色
+                    "#B2FF59", // 淺綠
+                    "#EEFF41", // 萊姆
+                    "#FFD740", // 琥珀
+                    "#FFAB40", // 橘色
+                    "#FF6E40"  // 深橘
                 ];
-                return colors[id % colors.length];
+                
+                // 結合 ID 和名字來生成索引，確保同一個人總是相同顏色
+                const hash = (id + (name || '')).split('').reduce((acc, char) => {
+                    return char.charCodeAt(0) + ((acc << 5) - acc);
+                }, 0);
+                
+                return distinctColors[Math.abs(hash) % distinctColors.length];
             },
 
             renderEmployees() {
@@ -2402,7 +2314,7 @@
                     item.className = 'list-item employee-item';
                     item.innerHTML = `
                         <div class="item-details">
-                            <div class="avatar-initial" style="background-color: ${this.generateColorById(employee.id)}">
+                            <div class="avatar-initial" style="background-color: ${this.generateDistinctColor(employee.id, employee.name)}">
                                 ${employee.avatarText || employee.name.charAt(0)}
                             </div>
                             <div>
@@ -3063,4 +2975,3 @@
     </script>
 </body>
 </html>
-

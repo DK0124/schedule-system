@@ -617,17 +617,13 @@
                     <span class="material-icons">analytics</span>
                     匯出分析
                 </button>
-                <a href="index.html" class="btn btn-secondary" style="text-decoration: none;">
-                    <span class="material-icons">arrow_back</span>
-                    返回管理
-                </a>
             </div>
 
             <!-- 關鍵指標 -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-header">
-                                            <div class="stat-icon">
+                        <div class="stat-icon">
                             <span class="material-icons">groups</span>
                         </div>
                     </div>
@@ -809,7 +805,25 @@
                     if (result.success && result.data) {
                         this.employees = result.data.employees || [];
                         this.shifts = result.data.shifts || [];
-                        this.schedules = result.data.schedules || {};
+                        
+                        // 處理排班資料
+                        if (Array.isArray(result.data.schedules)) {
+                            this.schedules = {};
+                            result.data.schedules.forEach(schedule => {
+                                const date = schedule.date;
+                                if (!this.schedules[date]) {
+                                    this.schedules[date] = [];
+                                }
+                                this.schedules[date].push({
+                                    employeeId: schedule.employeeId,
+                                    startTime: schedule.startTime,
+                                    endTime: schedule.endTime,
+                                    notes: schedule.notes || ''
+                                });
+                            });
+                        } else {
+                            this.schedules = result.data.schedules || {};
+                        }
                         
                         if (!silent) {
                             this.showToast('資料已更新', 'success');
@@ -840,6 +854,27 @@
                     this.updateDashboard();
                     this.renderCharts();
                 }
+            },
+            
+            // 改進的顏色生成函數
+            generateDistinctColor(id, name) {
+                const distinctColors = [
+                    "#E91E63", "#9C27B0", "#673AB7", "#3F51B5", "#2196F3",
+                    "#03A9F4", "#00BCD4", "#009688", "#4CAF50", "#8BC34A",
+                    "#CDDC39", "#FFC107", "#FF9800", "#FF5722", "#795548",
+                    "#607D8B", "#F44336", "#00ACC1", "#7B1FA2", "#303F9F",
+                    "#0288D1", "#0097A7", "#00796B", "#388E3C", "#689F38",
+                    "#AFB42B", "#FFA000", "#F57C00", "#E64A19", "#5D4037",
+                    "#455A64", "#C2185B", "#7C4DFF", "#536DFE", "#448AFF",
+                    "#40C4FF", "#18FFFF", "#64FFDA", "#69F0AE", "#B2FF59",
+                    "#EEFF41", "#FFD740", "#FFAB40", "#FF6E40"
+                ];
+                
+                const hash = (id + (name || '')).split('').reduce((acc, char) => {
+                    return char.charCodeAt(0) + ((acc << 5) - acc);
+                }, 0);
+                
+                return distinctColors[Math.abs(hash) % distinctColors.length];
             },
             
             updateDashboard() {
@@ -943,10 +978,12 @@
                     const timeline = document.createElement('div');
                     timeline.className = 'employee-timeline';
                     
+                    const avatarColor = this.generateDistinctColor(employee.id, employee.name);
+                    
                     const label = document.createElement('div');
                     label.className = 'employee-label';
                     label.innerHTML = `
-                        <div class="employee-avatar-small" style="background: ${this.generateColorById(employeeId)}">
+                        <div class="employee-avatar-small" style="background: ${avatarColor}">
                             ${employee.avatarText || employee.name.charAt(0)}
                         </div>
                         ${employee.name}
@@ -968,7 +1005,7 @@
                         
                         block.style.left = `${left}%`;
                         block.style.width = `${width}%`;
-                        block.style.background = this.generateColorById(employeeId);
+                        block.style.background = avatarColor;
                         block.textContent = `${schedule.startTime}-${schedule.endTime}`;
                         block.title = schedule.notes || '無備註';
                         
@@ -997,11 +1034,13 @@
                         todaySchedule: null
                     };
                     
+                    const avatarColor = this.generateDistinctColor(employee.id, employee.name);
+                    
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div class="employee-avatar-small" style="background: ${this.generateColorById(employee.id)}">
+                                <div class="employee-avatar-small" style="background: ${avatarColor}">
                                     ${employee.avatarText || employee.name.charAt(0)}
                                 </div>
                                 ${employee.name}
@@ -1175,14 +1214,6 @@
                 return hours * 60 + minutes;
             },
             
-            generateColorById(id) {
-                const colors = [
-                    "#e53935", "#d81b60", "#8e24aa", "#5e35b1", "#3949ab",
-                    "#1e88e5", "#039be5", "#00acc1", "#00897b", "#43a047"
-                ];
-                return colors[id % colors.length];
-            },
-            
             async refreshData() {
                 await this.loadData();
             },
@@ -1283,4 +1314,3 @@
     </script>
 </body>
 </html>
-                        
